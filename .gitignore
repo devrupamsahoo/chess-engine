@@ -1,0 +1,14 @@
+# CLion project files
+.idea/
+
+# CMake build folders
+cmake-build-debug/
+cmake-build-release/
+
+# Compiled files (Windows / MinGW)
+*.exe
+*.obj
+*.o
+
+# Optional: logs
+*.log
