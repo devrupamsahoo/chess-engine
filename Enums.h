@@ -7,6 +7,7 @@
 
 #include <string_view>
 
+// chess piece identifiers
 enum Piece {
     whitePawn,
     whiteKnight,
@@ -27,8 +28,9 @@ enum Piece {
 
 constexpr int pieceCount = 12;
 
-constexpr std::string_view pieceMap = "PNBRQKpnbrqk";
+constexpr std::string_view pieceToCharMap = "PNBRQKpnbrqk";
 
+// board square indices (a1 = 0 ... h8 = 63)
 enum Square {
     a1, b1, c1, d1, e1, f1, g1, h1,
     a2, b2, c2, d2, e2, f2, g2, h2,
@@ -38,6 +40,32 @@ enum Square {
     a6, b6, c6, d6, e6, f6, g6, h6,
     a7, b7, c7, d7, e7, f7, g7, h7,
     a8, b8, c8, d8, e8, f8, g8, h8
+};
+
+constexpr int squareCount = 64;
+
+// movement directions used for ray tracing
+enum Direction {
+    up,         // +8
+    down,       // -8
+    left,       // -1
+    right,      // +1
+
+    upLeft,     // +7
+    upRight,    // +9
+    downLeft,   // -9
+    downRight   // -7
+};
+
+constexpr int directionCount = 8;
+
+// castling move types used by move history
+enum CastlingType {
+    noCastle,
+    whiteKingside,
+    whiteQueenside,
+    blackKingside,
+    blackQueenside
 };
 
 #endif //CHESS_ENGINE_ENUMS_H

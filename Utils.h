@@ -9,7 +9,7 @@
 #include <string>
 
 namespace Utils {
-    // returns true if a bit is set
+    // returns true if the specified square's bit is set
     bool checkBit(uint64_t board, int square);
 
     // sets a bit
@@ -18,7 +18,7 @@ namespace Utils {
     // clears a bit
     void clearBit(uint64_t &board, int square);
 
-    // converts user input to bitboard square
+    // converts board coordinates into a square index
     int coordinateToPosition(const std::string &position);
 }
 

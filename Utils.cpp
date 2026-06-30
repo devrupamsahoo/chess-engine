@@ -4,7 +4,7 @@
 
 #include "Utils.h"
 
-// returns true if a bit is set
+// returns true if the specified square's bit is set
 bool Utils::checkBit(uint64_t board, int square) {
     return (board & (1ULL << square)) != 0;
 }
@@ -19,7 +19,7 @@ void Utils::clearBit(uint64_t &board, int square) {
     board &= ~(1ULL << square);
 }
 
-// converts user input to bitboard square
+// converts board coordinates into a square index
 int Utils::coordinateToPosition(const std::string &position) {
     int file = position[0] - 'a';
     int rank = position[1] - '1';

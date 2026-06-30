@@ -6,6 +6,8 @@
 #include <iostream>
 #include "MoveValidator.h"
 #include "ChessBoard.h"
+#include "KingValidator.h"
+#include "PawnValidator.h"
 #include "Utils.h"
 
 GameManager::GameManager() {
@@ -18,13 +20,21 @@ void GameManager::run() {
 
     // game loop
     while (gameIsRunning) {
-        printTurn();
+        displayTurn();
 
         bool moveCompleted = processTurn();
 
         if (moveCompleted && gameIsRunning) {
             // clears terminal
             system("cls");
+
+            // next player (opponent) after the move
+            bool isNextPlayerWhite = !board.isWhiteTurn();
+
+            // notify if the opponent's king is in check
+            if (KingValidator::isKingInCheck(board, isNextPlayerWhite)) {
+                std::cout << std::endl << (isNextPlayerWhite ? "White" : "Black") << " king is in check!" << std::endl;
+            }
 
             board.printBoard();
 
@@ -36,6 +46,7 @@ void GameManager::run() {
 }
 
 // processes input validation, move validation, moving pieces
+// returns true if the current player's move is successfully completed
 bool GameManager::processTurn() {
     std::string startPosInput;
     int startPos;
@@ -66,7 +77,7 @@ bool GameManager::processTurn() {
     }
 
     Piece selectedPiece = board.getPieceAt(startPos);
-    std::cout << "Piece selected: " << pieceMap[selectedPiece] << std::endl;
+    std::cout << "Piece selected: " << pieceToCharMap[selectedPiece] << std::endl;
 
 
     std::string endPosInput;
@@ -95,14 +106,38 @@ bool GameManager::processTurn() {
 
         endPos = Utils::coordinateToPosition(endPosInput);
 
-        // TODO: check if move is legal
+        // checks if move is legal
+        if (!MoveValidator::isValidMove(board, startPos, endPos)) {
+            continue;
+        }
 
         break;
     }
 
     std::cout << "Moving piece from "<< startPos << " to " << endPos << std::endl;
 
-    // TODO: move the piece
+    Piece pieceMoved = board.getPieceAt(startPos);
+
+    bool isCastling = (pieceMoved == whiteKing || pieceMoved == blackKing) &&
+                      (std::abs((startPos & 7) - (endPos & 7)) == 2);
+
+    if (isCastling) {
+        board.executeCastle(startPos, endPos, board.isWhiteTurn());
+    } else {
+        // moves the piece
+        board.makeMove(startPos, endPos);
+    }
+
+    // handles pawn promotion after move
+    if (pieceMoved == whitePawn || pieceMoved == blackPawn) {
+
+        int rank = endPos >> 3;
+
+        // white pawn reaches 8th rank or black pawn reaches 1st rank
+        if (rank == 7 || rank == 0) {
+            PawnValidator::promotePawn(board, endPos, (pieceMoved == whitePawn));
+        }
+    }
 
     return true;
 }
@@ -116,8 +151,9 @@ std::string GameManager::getInput(const std::string &prompt) {
     return input;
 }
 
-// prints player's turn
-void GameManager::printTurn() {
+// displays the current player's turn
+void GameManager::displayTurn() {
+
     if (board.isWhiteTurn()) {
         std::cout << "White's Turn" << std::endl;
     } else {

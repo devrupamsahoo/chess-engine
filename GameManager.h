@@ -16,13 +16,14 @@ private:
     // master flag for game loop
     bool gameIsRunning;
 
-    // prints player's turn
-    void printTurn();
+    // displays the current player's turn
+    void displayTurn();
 
     // takes input from player
     static std::string getInput(const std::string &prompt);
 
     // processes input validation, move validation, moving pieces
+    // returns true if the current player's move is successfully completed
     bool processTurn();
 
 public:
