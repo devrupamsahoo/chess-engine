@@ -4,6 +4,7 @@
 
 #include "AttackValidator.h"
 #include "Utils.h"
+#include "ChessBoard.h"
 
 // precomputed attack masks indexed by source square
 namespace AttackTables {
@@ -12,6 +13,16 @@ namespace AttackTables {
 
     // pawnAttacks[0] for white pawns, pawnAttacks[1] for black pawns
     uint64_t PawnAttacks[2][64] = {0};
+
+    // define the initializer
+    AttackTableInitializer::AttackTableInitializer() {
+        AttackValidator::initKnightAttacks();
+        AttackValidator::initKingAttacks();
+        AttackValidator::initPawnAttacks();
+    }
+
+    // create the global instance
+    AttackTableInitializer initializer;
 }
 
 // initializes knight attack table computation

@@ -6,7 +6,8 @@
 #define CHESS_ENGINE_ATTACKVALIDATOR_H
 
 
-#include "ChessBoard.h"
+class ChessBoard;
+#include <cstdint>
 #include "RayTable.h"
 
 // precomputed attack masks for all pieces
@@ -21,10 +22,17 @@ namespace AttackTables {
     // pawnAttacks[0] for white pawns
     // pawnAttacks[1] for black pawns
     extern uint64_t PawnAttacks[2][64];
+
+    // handles automatic initialization
+    struct AttackTableInitializer {
+        AttackTableInitializer();
+    };
+    
+    extern AttackTableInitializer initializer;
 }
 
 class AttackValidator {
-private:
+public:
     // initializes knight attack table computation
     static void initKnightAttacks();
 
@@ -52,7 +60,6 @@ private:
     // returns true if a square is being attacked by queens of given color
     static bool isAttackedByQueen(ChessBoard &board, int square, bool attackerIsWhite);
 
-public:
     // returns true if a square is being attacked by pieces of given color
     static bool isSquareUnderAttack(ChessBoard &board, int square, bool attackerIsWhite);
 
