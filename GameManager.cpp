@@ -48,63 +48,44 @@ void GameManager::run() {
 // processes input validation, move validation, moving pieces
 // returns true if the current player's move is successfully completed
 bool GameManager::processTurn() {
-    std::string startPosInput;
+    std::string input;
     int startPos;
+    int endPos;
+    char promotedPiece = 'q'; // default to Queen if not specified
 
     // input loop for valid input format and valid piece selection
-    while (true) {
-        startPosInput = getInput("Enter piece position ('x' to exit): ");
+    while(true) {
+        input = getInput("Enter move ('x' to reset): ");
 
-        // exits the game
-        if (startPosInput == "x") {
-            gameIsRunning = false;
-            return false;
+        // resets the game
+        if (input == "x") {
+            board = ChessBoard(); // overwrites the current board with a fresh one
+            system("cls");
+            std::cout << "Game reset back to starting position!" << std::endl;
+            board.printBoard();
+            return false;         // returns false so the turn doesn't switch
         }
 
         // validates user input format
-        if (!MoveValidator::isValidPosition(startPosInput)) {
+        if (!MoveValidator::isValidPosition(input)) {
             continue;
         }
 
-        startPos = Utils::coordinateToPosition(startPosInput);
+        // extract the promotion character if provided
+        if (input.length() == 5) {
+            promotedPiece = input[4];
+        }
+
+        // use exactly 2 characters for coordinates
+        startPos = Utils::coordinateToPosition(input.substr(0, 2));
 
         if (!board.isValidPiece(board.isWhiteTurn(), startPos)) {
             std::cout << "Invalid piece selected!" << std::endl;
             continue;
         }
 
-        break;
-    }
-
-    Piece selectedPiece = board.getPieceAt(startPos);
-    std::cout << "Piece selected: " << pieceToCharMap[selectedPiece] << std::endl;
-
-
-    std::string endPosInput;
-    int endPos;
-
-    // second input loop for validating input format and legal move
-    while (true) {
-        endPosInput = getInput("Enter piece position ('x' to exit or 'b' to unselect): ");
-
-        // exits the game
-        if (endPosInput == "x") {
-            gameIsRunning = false;
-            return false;
-        }
-
-        // lets player select another piece
-        if (endPosInput == "b") {
-            std::cout << "Piece unselected!" << std::endl;
-            return false;
-        }
-
-        // validates user input format
-        if (!MoveValidator::isValidPosition(endPosInput)) {
-            continue;
-        }
-
-        endPos = Utils::coordinateToPosition(endPosInput);
+        // use exactly 2 characters starting at index 2
+        endPos = Utils::coordinateToPosition(input.substr(2, 2));
 
         // checks if move is legal
         if (!MoveValidator::isValidMove(board, startPos, endPos)) {
@@ -113,8 +94,6 @@ bool GameManager::processTurn() {
 
         break;
     }
-
-    std::cout << "Moving piece from "<< startPos << " to " << endPos << std::endl;
 
     Piece pieceMoved = board.getPieceAt(startPos);
 
@@ -129,14 +108,8 @@ bool GameManager::processTurn() {
     }
 
     // handles pawn promotion after move
-    if (pieceMoved == whitePawn || pieceMoved == blackPawn) {
-
-        int rank = endPos >> 3;
-
-        // white pawn reaches 8th rank or black pawn reaches 1st rank
-        if (rank == 7 || rank == 0) {
-            PawnValidator::promotePawn(board, endPos, (pieceMoved == whitePawn));
-        }
+    if (PawnValidator::isPawnPromotion(endPos, board.isWhiteTurn())) {
+        PawnValidator::promotePawn(board, endPos, promotedPiece, (pieceMoved == whitePawn));
     }
 
     return true;

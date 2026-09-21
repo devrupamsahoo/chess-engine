@@ -106,69 +106,58 @@ bool PawnValidator::isPawnMove(ChessBoard &board, int startPos, int endPos) {
     return false;
 }
 
-// promotes a pawn that has reached the last rank
-void PawnValidator::promotePawn(ChessBoard &board, int endPos, bool isWhitePlayer) {
-
+// returns true if a move is promotion
+bool PawnValidator::isPawnPromotion(int endPos, bool isWhitePlayer) {
     int rank = endPos >> 3;
 
-    // white pawn promotes on 8th rank, black pawn promotes on 1st rank
     if ((isWhitePlayer && rank == 7) || (!isWhitePlayer && rank == 0)) {
+        return true;
+    }
 
-        std::string promotionChoice;
+    return false;
+}
 
-        while (true) {
-            std::cout << "Promote to (Q)ueen, (R)ook, (B)ishop, or (N)ight? Enter a letter: ";
-            std::cin >> promotionChoice;
+// promotes a pawn that has reached the last rank
+void PawnValidator::promotePawn(ChessBoard &board, int endPos, char promotedPieceChar, bool isWhitePlayer) {
 
-            char promotedPieceChar = toupper(promotionChoice[0]);
+    // convert to uppercase to standardize evaluation
+    promotedPieceChar = toupper(promotedPieceChar);
+    Piece promotedPiece;
 
-            if (promotedPieceChar == 'Q' || promotedPieceChar == 'R'
-                || promotedPieceChar == 'B' || promotedPieceChar == 'N') {
+    if (isWhitePlayer) {
+        // remove white pawn from promotion square
+        Utils::clearBit(board.getPieceBitboard(whitePawn), endPos);
 
-                Piece promotedPiece;
+        if (promotedPieceChar == 'Q') {
+            promotedPiece = whiteQueen;
+        } else if (promotedPieceChar == 'R') {
+            promotedPiece = whiteRook;
+        } else if (promotedPieceChar == 'B') {
+            promotedPiece = whiteBishop;
+        } else {
+            promotedPiece = whiteKnight;
+        }
 
-                if (isWhitePlayer) {
+    } else {
+        // remove black pawn from promotion square
+        Utils::clearBit(board.getPieceBitboard(blackPawn), endPos);
 
-                    // remove white pawn from promotion square
-                    Utils::clearBit(board.getPieceBitboard(whitePawn), endPos);
-
-                    if (promotedPieceChar == 'Q') {
-                        promotedPiece = whiteQueen;
-                    } else if (promotedPieceChar == 'R') {
-                        promotedPiece = whiteRook;
-                    } else if (promotedPieceChar == 'B') {
-                        promotedPiece = whiteBishop;
-                    } else {
-                        promotedPiece = whiteKnight;
-                    }
-
-                } else {
-                    // remove black pawn from promotion square
-                    Utils::clearBit(board.getPieceBitboard(blackPawn), endPos);
-
-                    if (promotedPieceChar == 'Q') {
-                        promotedPiece = blackQueen;
-                    } else if (promotedPieceChar == 'R') {
-                        promotedPiece = blackRook;
-                    } else if (promotedPieceChar == 'B') {
-                        promotedPiece = blackBishop;
-                    } else {
-                        promotedPiece = blackKnight;
-                    }
-                }
-
-                // place promoted piece on the same square
-                Utils::setBit(board.getPieceBitboard(promotedPiece), endPos);
-
-                // update occupancy after replacing pawn
-                board.updateOccupancy();
-
-                break;
-            }
-
-            std::cout << "Invalid choice!" << std::endl;
+        if (promotedPieceChar == 'Q') {
+            promotedPiece = blackQueen;
+        } else if (promotedPieceChar == 'R') {
+            promotedPiece = blackRook;
+        } else if (promotedPieceChar == 'B') {
+            promotedPiece = blackBishop;
+        } else {
+            promotedPiece = blackKnight;
         }
     }
+
+    // place promoted piece on the same square
+    Utils::setBit(board.getPieceBitboard(promotedPiece), endPos);
+
+    // update occupancy after replacing pawn
+    board.updateOccupancy();
 }
 
 // returns true if en passant move is allowed

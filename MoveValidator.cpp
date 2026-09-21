@@ -14,25 +14,36 @@
 
 // returns true if the input position is valid
 bool MoveValidator::isValidPosition(const std::string &position) {
-    // returns false if input length is not 2
-    if (position.length() != 2) {
-        std::cout << "Invalid position length!!" << std::endl;
-        return false;
+
+    // validates standard 4-character moves eg. e2e4
+    if (position.length() == 4) {
+        if (position[0] >= 'a' && position[0] <= 'h' &&
+            position[2] >= 'a' && position[2] <= 'h') {
+
+            if (position[1] >= '1' && position[1] <= '8' &&
+                position[3] >= '1' && position[3] <= '8') {
+                return true;
+                }
+            }
     }
 
-    // returns false if first character is something other than a...h
-    if (position[0] < 'a' || position[0] > 'h') {
-        std::cout << "Invalid position format!!"<< std::endl;
-        return false;
+    // validates 5-character promotion moves eg. e7e8q
+    if (position.length() == 5) {
+        if (position[0] >= 'a' && position[0] <= 'h' && position[2] >= 'a' && position[2] <= 'h') {
+
+            if (position[1] >= '1' && position[1] <= '8' && position[3] >= '1' && position[3] <= '8') {
+
+                char p = tolower(position[4]);
+
+                if (p == 'q' || p == 'r' || p == 'n' || p == 'b') {
+                    return true;
+                }
+            }
+        }
     }
 
-    // returns false if first character is something other than 1...8
-    if (position[1] < '1' || position[1] > '8') {
-        std::cout << "Invalid position format!!"<< std::endl;
-        return false;
-    }
-
-    return true;
+    std::cout << "Not a valid position format!!" << std::endl;
+    return false;
 }
 
 // returns true if the move is a valid knight move

@@ -24,8 +24,11 @@ public:
     // returns true if en passant move is allowed
     static bool isEnPassantMove(ChessBoard &board, int startPos, int endPos);
 
+    // returns true if a move is promotion
+    static bool isPawnPromotion(int endPos, bool whitePlayer);
+
     // promotes a pawn that has reached the last rank
-    static void promotePawn(ChessBoard &board, int endPos, bool isWhitePlayer);
+    static void promotePawn(ChessBoard &board, int endPos, char promotedPieceChar, bool isWhitePlayer);
 };
 
 
