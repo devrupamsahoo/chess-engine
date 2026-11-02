@@ -12,3 +12,6 @@ cmake-build-release/
 
 # Optional: logs
 *.log
+
+/build/
+desktop.ini

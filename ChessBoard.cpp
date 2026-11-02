@@ -234,7 +234,7 @@ void ChessBoard::updateKingPosition() {
 }
 
 // makes a move and stores the history
-void ChessBoard::makeMove(int startPos, int endPos) {
+void ChessBoard::makeMove(int startPos, int endPos, Piece promotedPiece) {
     Move move;
 
     move.startSquare = startPos;
@@ -248,6 +248,9 @@ void ChessBoard::makeMove(int startPos, int endPos) {
 
     // save previous en passant target
     move.oldEnPassantTarget = enPassantTarget;
+
+    // saving the promotion piece
+    move.promotedPiece = promotedPiece;
 
     // execute en passant capture
     if ((move.movedPiece == whitePawn || move.movedPiece == blackPawn)
@@ -269,9 +272,6 @@ void ChessBoard::makeMove(int startPos, int endPos) {
     } else {
         enPassantTarget = -1;
     }
-
-    // save move for undo
-    moveHistory.pushMove(move);
 
     // updating castling rights
     Piece p = move.movedPiece;
@@ -332,7 +332,9 @@ void ChessBoard::makeMove(int startPos, int endPos) {
     }
 
     // place moving piece
-    Utils::setBit(getPieceBitboard(move.movedPiece), endPos);
+    Piece pieceToPlace = (promotedPiece == noPiece) ? move.movedPiece : promotedPiece;
+
+    Utils::setBit(getPieceBitboard(pieceToPlace), endPos);
 
     // update cached king position
     if (move.movedPiece == whiteKing || move.movedPiece == blackKing) {
@@ -341,6 +343,9 @@ void ChessBoard::makeMove(int startPos, int endPos) {
 
     // refresh occupancies
     updateOccupancy();
+
+    // save move for undo
+    moveHistory.pushMove(move);
 }
 
 // undo a move and delete its history
@@ -354,8 +359,11 @@ void ChessBoard::undoMove() {
     // restore old en passant target
     enPassantTarget = move.oldEnPassantTarget;
 
+    // a promoted pawn ends the move as a different piece than it started.
+    Piece pieceAtDestination = move.promotedPiece != noPiece ? move.promotedPiece : move.movedPiece;
+
     // remove moved piece from destination
-    Utils::clearBit(getPieceBitboard(move.movedPiece), move.endSquare);
+    Utils::clearBit(getPieceBitboard(pieceAtDestination), move.endSquare);
 
     // restore moved piece
     Utils::setBit(getPieceBitboard(move.movedPiece), move.startSquare);
@@ -399,29 +407,36 @@ const CastlingRights& ChessBoard::getCastlingRights() const {
 }
 
 // executes a castling move
-void ChessBoard::executeCastle(int startPos, int endPos, bool isWhitePlayer) {
+bool ChessBoard::executeCastle(int startPos, int endPos, bool isWhitePlayer) {
     Move move;
 
     move.startSquare = startPos;
     move.endSquare = endPos;
 
     move.movedPiece = getPieceAt(startPos);
+    move.capturedPiece = noPiece;
 
     // save current castling state
     move.oldCastlingRights = castlingRights;
+    move.oldEnPassantTarget = enPassantTarget;
 
     // whiteside
     if (isWhitePlayer) {
         // king start must be e1
-        if (startPos != e1) return;
+        if (startPos != e1 || getPieceAt(startPos) != whiteKing) {
+            return false;
+        }
 
         // kingside
         if (endPos == g1) {
             if (!CastlingValidator::canCastleKingside(*this, true)) {
-                return;
+                return false;
             }
 
-            move.capturedPiece = getPieceAt(h1);
+            if (getPieceAt(h1) != whiteRook) {
+                return false;
+            }
+
             move.castlingType = whiteKingside;
 
             movePiece(e1, g1);  // king
@@ -431,27 +446,35 @@ void ChessBoard::executeCastle(int startPos, int endPos, bool isWhitePlayer) {
         // queenside
         else if (endPos == c1) {
             if (!CastlingValidator::canCastleQueenside(*this, true)) {
-                return;
+                return false;
             }
 
-            move.capturedPiece = getPieceAt(a1);
+            if (getPieceAt(a1) != whiteRook) {
+                return false;
+            }
+
             move.castlingType = whiteQueenside;
 
             movePiece(e1, c1);  // king
             movePiece(a1, d1);  // rook
+        }else {
+            return false;
         }
     } else { // black side
-        if (startPos != e8) {
-            return;
+        if (startPos != e8 || getPieceAt(startPos) != blackKing) {
+            return false;
         }
 
         // kingside
         if (endPos == g8) {
             if (!CastlingValidator::canCastleKingside(*this, false)) {
-                return;
+                return false;
             }
 
-            move.capturedPiece = getPieceAt(h8);
+            if (getPieceAt(h8) != blackRook) {
+                return false;
+            }
+
             move.castlingType = blackKingside;
 
             movePiece(e8, g8);
@@ -461,23 +484,40 @@ void ChessBoard::executeCastle(int startPos, int endPos, bool isWhitePlayer) {
         // queenside
         else if (endPos == c8) {
             if (!CastlingValidator::canCastleQueenside(*this, false)) {
-                return;
+                return false;
             }
 
-            move.capturedPiece = getPieceAt(a8);
+            if (getPieceAt(a8) != blackRook) {
+                return false;
+            }
+
             move.castlingType = blackQueenside;
 
             movePiece(e8, c8);
             movePiece(a8, d8);
+        }else {
+            return false;
         }
+    }
+
+    // castling uses this turn, so any en passant opportunity expires.
+    enPassantTarget = -1;
+
+    // clearing castling rights
+    if (isWhitePlayer) {
+        castlingRights.wk = false;
+        castlingRights.wq = false;
+    } else {
+        castlingRights.bk = false;
+        castlingRights.bq = false;
     }
 
     // save move for undo
     moveHistory.pushMove(move);
+    return true;
 }
 
 // returns the current en passant target square
 int ChessBoard::getEnPassantTarget() const {
     return enPassantTarget;
 }
-

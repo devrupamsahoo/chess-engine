@@ -56,6 +56,17 @@ bool CastlingValidator::canCastleKingside(ChessBoard &board, bool isWhitePlayer)
         return false;
     }
 
+    // castling rights alone do not guarantee the king and rook are still home.
+    int kingSquare = isWhitePlayer ? e1 : e8;
+    int rookSquare = isWhitePlayer ? h1 : h8;
+
+    Piece king = isWhitePlayer ? whiteKing : blackKing;
+    Piece rook = isWhitePlayer ? whiteRook : blackRook;
+
+    if (board.getPieceAt(kingSquare) != king || board.getPieceAt(rookSquare) != rook) {
+        return false;
+    }
+
     int pathStart = isWhitePlayer ? e1 : e8;
     int pathEnd   = isWhitePlayer ? h1 : h8;
 
@@ -84,6 +95,17 @@ bool CastlingValidator::canCastleQueenside(ChessBoard &board, bool isWhitePlayer
 
     if (!hasQueensideRights(board, isWhitePlayer)) {
         std::cout << "No castling rights\n";
+        return false;
+    }
+
+    // castling rights alone do not guarantee the king and rook are still home.
+    int kingSquare = isWhitePlayer ? e1 : e8;
+    int rookSquare = isWhitePlayer ? a1 : a8;
+
+    Piece king = isWhitePlayer ? whiteKing : blackKing;
+    Piece rook = isWhitePlayer ? whiteRook : blackRook;
+
+    if (board.getPieceAt(kingSquare) != king || board.getPieceAt(rookSquare) != rook) {
         return false;
     }
 

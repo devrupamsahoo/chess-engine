@@ -84,7 +84,7 @@ public:
     void updateKingPosition();
 
     // makes a move and stores the history
-    void makeMove(int startPos, int endPos);
+    void makeMove(int startPos, int endPos, Piece promotedPiece = noPiece);
 
     // undo a move and delete its history
     void undoMove();
@@ -93,7 +93,7 @@ public:
     const CastlingRights& getCastlingRights() const;
 
     // executes a castling move
-    void executeCastle(int startPos, int endPos, bool isWhitePlayer);
+    bool executeCastle(int startPos, int endPos, bool isWhitePlayer);
 
     // returns the current en passant target square
     int getEnPassantTarget() const;

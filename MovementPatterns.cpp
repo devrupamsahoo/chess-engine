@@ -6,16 +6,28 @@
 
 // returns true if a move is horizontal
 bool MovementPatterns::isHorizontalMove(int startPos, int endPos) {
+    if (startPos == endPos) {
+        return false;
+    }
+
     return (startPos >> 3) == (endPos >> 3);
 }
 
 // returns true if a move is vertical
 bool MovementPatterns::isVerticalMove(int startPos, int endPos) {
+    if (startPos == endPos) {
+        return false;
+    }
+
     return (startPos & 7) == (endPos & 7);
 }
 
 // returns true if a move is diagonal
 bool MovementPatterns::isDiagonalMove(int startPos, int endPos) {
+    if (startPos == endPos) {
+        return false;
+    }
+
     int rankDiff = std::abs((startPos >> 3) - (endPos >> 3));
     int fileDiff = std::abs((startPos & 7) - (endPos & 7));
 

@@ -4,6 +4,7 @@
 
 #include "GameManager.h"
 #include <iostream>
+#include <cctype>
 #include "MoveValidator.h"
 #include "ChessBoard.h"
 #include "KingValidator.h"
@@ -97,19 +98,41 @@ bool GameManager::processTurn() {
 
     Piece pieceMoved = board.getPieceAt(startPos);
 
+    // convert the promotion choice into the piece type for the moving side
+    Piece promotionPiece = noPiece;
+
+    // convert the promotion choice to the moving side's piece type for the move record
+    if ((pieceMoved == whitePawn || pieceMoved == blackPawn) && PawnValidator::isPawnPromotion(endPos, board.isWhiteTurn())) {
+        const bool white = pieceMoved == whitePawn;
+        const char choice = static_cast<char>(std::tolower(static_cast<unsigned char>(promotedPiece)));
+
+        switch (choice) {
+            case 'q':
+                promotionPiece = white ? whiteQueen : blackQueen;
+                break;
+            case 'r':
+                promotionPiece = white ? whiteRook : blackRook;
+                break;
+            case 'b':
+                promotionPiece = white ? whiteBishop : blackBishop;
+                break;
+            case 'n':
+                promotionPiece = white ? whiteKnight : blackKnight;
+                break;
+        }
+    }
+
     bool isCastling = (pieceMoved == whiteKing || pieceMoved == blackKing) &&
                       (std::abs((startPos & 7) - (endPos & 7)) == 2);
 
+    // castling moves the king and rook together, so execute it separately from a normal move
     if (isCastling) {
-        board.executeCastle(startPos, endPos, board.isWhiteTurn());
+        if (!board.executeCastle(startPos, endPos, board.isWhiteTurn())) {
+            return false;
+        }
     } else {
         // moves the piece
-        board.makeMove(startPos, endPos);
-    }
-
-    // handles pawn promotion after move
-    if (PawnValidator::isPawnPromotion(endPos, board.isWhiteTurn())) {
-        PawnValidator::promotePawn(board, endPos, promotedPiece, (pieceMoved == whitePawn));
+        board.makeMove(startPos, endPos, promotionPiece);
     }
 
     return true;

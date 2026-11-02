@@ -23,6 +23,9 @@ struct Move {
     Piece movedPiece;
     Piece capturedPiece;
 
+    // store the replacement piece so undo can restore the original pawn.
+    Piece promotedPiece = noPiece;
+
     CastlingType castlingType = noCastle;
     CastlingRights oldCastlingRights;
 

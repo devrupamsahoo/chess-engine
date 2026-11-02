@@ -86,4 +86,5 @@ The project is actively evolving. Upcoming improvements include:
 
 ### Compile
 ```bash
-g++ main.cpp -o chess
+cmake -S . -B build
+cmake --build build

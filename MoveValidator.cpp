@@ -9,7 +9,7 @@
 #include "PieceOwnership.h"
 #include "MovementPatterns.h"
 #include "PawnValidator.h"
-#include "kingValidator.h"
+#include "KingValidator.h"
 #include "PathValidator.h"
 
 // returns true if the input position is valid
