@@ -1,0 +1,200 @@
+//
+// Created by sahoo on 26-06-2026.
+//
+
+#include "chess/move/PawnValidator.h"
+#include "chess/move/PieceOwnership.h"
+#include "chess/core/Utils.h"
+
+#include <iostream>
+
+// returns true if pawn is moving forward one step
+bool PawnValidator::isPawnForwardMove(ChessBoard &board, int startPos, int endPos) {
+    // pawn cannot move forward into an occupied square
+    if (board.getPieceAt(endPos) != noPiece) {
+        return false;
+    }
+
+    // white pawn forward move
+    if (board.isWhiteTurn()) {
+        return (startPos + 8) == endPos;
+    }
+
+    // black pawn forward move
+    return (startPos - 8) == endPos;
+}
+
+// returns true if the pawn can move two squares forward from its starting rank
+bool PawnValidator::isPawnInitialDoubleMove(ChessBoard &board, int startPos, int endPos) {
+    const bool whiteToMove = board.isWhiteTurn();
+    const int startingRank = whiteToMove ? 1 : 6;
+
+    // pawns can move two squares only from their starting rank
+    if ((startPos >> 3) != startingRank) {
+        return false;
+    }
+
+    int middleSquare = whiteToMove ? startPos + 8 : startPos - 8;
+
+    // both the intermediate square and destination must be empty
+    if (Utils::checkBit(board.getAllOccupancy(), middleSquare)
+    || Utils::checkBit(board.getAllOccupancy(), endPos)) {
+        return false;
+    }
+
+    return whiteToMove
+        ? endPos == startPos + 16
+        : endPos == startPos - 16;
+}
+
+// returns true if pawn can capture diagonally
+bool PawnValidator::isPawnCaptureMove(ChessBoard &board, int startPos, int endPos) {
+
+    Piece targetPiece = board.getPieceAt(endPos);
+
+    // cannot capture empty square
+    if (targetPiece == noPiece) {
+        return false;
+    }
+
+    int startRank = startPos >> 3;
+    int endRank = endPos >> 3;
+
+    int startFile = startPos & 7;
+    int endFile = endPos & 7;
+
+    int rankDiff = endRank - startRank;
+    int fileDiff = abs(endFile - startFile);
+
+    // must move exactly one file diagonally
+    if (fileDiff != 1) {
+        return false;
+    }
+
+    // white pawn captures upward
+    if (board.isWhiteTurn()) {
+        return rankDiff == 1 && PieceOwnership::isEnemyPiece(board, endPos) && targetPiece != blackKing;
+    }
+
+    // black pawn captures downward
+    return rankDiff == -1 && PieceOwnership::isEnemyPiece(board, endPos) && targetPiece != whiteKing;
+}
+
+// master pawn validator: returns true if the pawn move is legal
+bool PawnValidator::isPawnMove(ChessBoard &board, int startPos, int endPos) {
+    // diagonal capture
+    if (isPawnCaptureMove(board, startPos, endPos)) {
+        return true;
+    }
+
+    // restricting capturing piece in front of the pawn
+    if (board.getPieceAt(endPos) != noPiece) {
+        return false;
+    }
+
+    // en passant
+    if (isEnPassantMove(board, startPos, endPos)) {
+        return true;
+    }
+
+    // checks if a pawn is moving two steps in first move
+    if (isPawnInitialDoubleMove(board, startPos, endPos)) {
+        return true;
+    }
+
+    // checks if a pawn is moving forward
+    if (isPawnForwardMove(board, startPos, endPos)) {
+        return true;
+    }
+
+    return false;
+}
+
+// returns true if a move is promotion
+bool PawnValidator::isPawnPromotion(int endPos, bool isWhitePlayer) {
+    int rank = endPos >> 3;
+
+    if ((isWhitePlayer && rank == 7) || (!isWhitePlayer && rank == 0)) {
+        return true;
+    }
+
+    return false;
+}
+
+// promotes a pawn that has reached the last rank
+void PawnValidator::promotePawn(ChessBoard &board, int endPos, char promotedPieceChar, bool isWhitePlayer) {
+
+    // convert to uppercase to standardize evaluation
+    promotedPieceChar = toupper(promotedPieceChar);
+    Piece promotedPiece;
+
+    if (isWhitePlayer) {
+        // remove white pawn from promotion square
+        Utils::clearBit(board.getPieceBitboard(whitePawn), endPos);
+
+        if (promotedPieceChar == 'Q') {
+            promotedPiece = whiteQueen;
+        } else if (promotedPieceChar == 'R') {
+            promotedPiece = whiteRook;
+        } else if (promotedPieceChar == 'B') {
+            promotedPiece = whiteBishop;
+        } else {
+            promotedPiece = whiteKnight;
+        }
+
+    } else {
+        // remove black pawn from promotion square
+        Utils::clearBit(board.getPieceBitboard(blackPawn), endPos);
+
+        if (promotedPieceChar == 'Q') {
+            promotedPiece = blackQueen;
+        } else if (promotedPieceChar == 'R') {
+            promotedPiece = blackRook;
+        } else if (promotedPieceChar == 'B') {
+            promotedPiece = blackBishop;
+        } else {
+            promotedPiece = blackKnight;
+        }
+    }
+
+    // place promoted piece on the same square
+    Utils::setBit(board.getPieceBitboard(promotedPiece), endPos);
+
+    // update occupancy after replacing pawn
+    board.updateOccupancy();
+}
+
+// returns true if en passant move is allowed
+bool PawnValidator::isEnPassantMove(ChessBoard &board, int startPos, int endPos) {
+    int enPassantSquare = board.getEnPassantTarget();
+
+    if (enPassantSquare == -1) {
+        return false;
+    }
+
+    int startRank = startPos >> 3;
+    int endRank = endPos >> 3;
+
+    int startFile = startPos & 7;
+    int endFile = endPos & 7;
+
+    int rankDiff = endRank - startRank;
+    int fileDiff = std::abs(startFile - endFile);
+
+    // white pawn en passant
+    if (board.isWhiteTurn()) {
+        if (rankDiff == 1 && fileDiff == 1) {
+            if (endPos == enPassantSquare) {
+                return true;
+            }
+        }
+    } else { // for black pawn en passant
+        if (rankDiff == -1 && fileDiff == 1) {
+            if (endPos == enPassantSquare) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}

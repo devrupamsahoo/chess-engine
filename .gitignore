@@ -10,8 +10,9 @@ cmake-build-release/
 *.obj
 *.o
 
-# Optional: logs
+# Optional
 *.log
+match_fens.txt
 
 /build/
 desktop.ini

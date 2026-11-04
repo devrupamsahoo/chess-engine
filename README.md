@@ -40,11 +40,11 @@ The game displays the available commands while running:
 | `e` | Export the current match's FEN snapshots to `match_fens.txt` |
 | `q` | Quit the game |
 
-When loading a position, enter its complete six-field FEN string at the prompt. A successful load starts a new match history from that position. Export writes the recorded positions in order, one FEN string per line, to `match_fens.txt` in the program's current working directory.
+When loading a position, enter its complete six-field FEN string at the prompt. A successful load starts a new match history from that position. Export writes the recorded positions in order, one FEN string per line, to `match_fens.txt` in the project root.
 
 ## 🏗️ Architecture Overview
 
-`ChessBoard` stores the piece bitboards, occupancy, side to move, castling rights, en passant target, move counters, and move history. `MoveValidator` coordinates piece-specific movement checks, path checks, and king-safety checks. `AttackValidator` uses precomputed attack tables for leapers and pawns, and ray scans for sliding attacks. `CastlingValidator` checks castling rights, required pieces, clear paths, and attacked squares. `FEN.cpp` implements board serialization and FEN loading, while `DisplayBoard` handles terminal board rendering. `GameManager` handles player input, commands, turns, and match FEN snapshots.
+`ChessBoard` stores the piece bitboards, occupancy, side to move, castling rights, en passant target, move counters, and move history. `MoveValidator` coordinates piece-specific movement checks, path checks, and king-safety checks. `AttackValidator` uses precomputed attack tables for leapers and pawns, and ray scans for sliding attacks. `CastlingValidator` checks castling rights, required pieces, clear paths, and attacked squares. `src/notation/FEN.cpp` implements board serialization and FEN loading, while `DisplayBoard` handles terminal board rendering. `GameManager` handles player input, commands, turns, and match FEN snapshots.
 
 ## 🚀 Planned Features
 
