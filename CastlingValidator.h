@@ -18,7 +18,7 @@ public:
     // returns true if all specified squares are safe from enemy attacks
     static bool areSquaresSafeFromAttack(ChessBoard &board, std::vector<int> &squares, bool isWhitePlayer);
 
-    // returns true if all squares between the king and rook are unoccupied
+    // every square between the king and rook must be empty
     static bool isPathClear(ChessBoard &board, int startPos, int endPos);
 
     // returns true if castling is possible on the king side
@@ -26,6 +26,7 @@ public:
 
     // returns true if castling is possible on the queen side
     static bool canCastleQueenside(ChessBoard &board, bool isWhitePlayer);
+
 };
 
 

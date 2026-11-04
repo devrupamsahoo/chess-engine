@@ -40,11 +40,12 @@ bool KingValidator::leavesKingInCheck(ChessBoard &board, int startPos, int endPo
 
     bool isWhitePlayer = board.isWhiteTurn();
 
-    board.makeMove(startPos, endPos);
+    // temporarily make the move without adding it to the game's move history
+    board.makeMove(startPos, endPos, noPiece, true);
 
     bool kingInCheck = isKingInCheck(board, isWhitePlayer);
 
-    board.undoMove();
+    board.undoMove(true);
 
     return kingInCheck;
 }

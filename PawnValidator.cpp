@@ -26,21 +26,25 @@ bool PawnValidator::isPawnForwardMove(ChessBoard &board, int startPos, int endPo
 
 // returns true if the pawn can move two squares forward from its starting rank
 bool PawnValidator::isPawnInitialDoubleMove(ChessBoard &board, int startPos, int endPos) {
-    // both intermediate and destination squares must be empty
-    int middleSquare = board.isWhiteTurn() ? startPos + 8 : startPos - 8;
+    const bool whiteToMove = board.isWhiteTurn();
+    const int startingRank = whiteToMove ? 1 : 6;
 
-    if (Utils::checkBit(board.getAllOccupancy(), middleSquare) || Utils::checkBit(board.getAllOccupancy(), endPos)) {
+    // pawns can move two squares only from their starting rank
+    if ((startPos >> 3) != startingRank) {
         return false;
     }
 
-    // white pawn forward double move
-    if (board.isWhiteTurn()) {
-        return ((startPos >> 3) == 1) && (startPos + 16 == endPos);
+    int middleSquare = whiteToMove ? startPos + 8 : startPos - 8;
+
+    // both the intermediate square and destination must be empty
+    if (Utils::checkBit(board.getAllOccupancy(), middleSquare)
+    || Utils::checkBit(board.getAllOccupancy(), endPos)) {
+        return false;
     }
 
-    // black pawn forward double move
-    return ((startPos >> 3) == 6) && (startPos - 16 == endPos);
-
+    return whiteToMove
+        ? endPos == startPos + 16
+        : endPos == startPos - 16;
 }
 
 // returns true if pawn can capture diagonally
@@ -177,7 +181,7 @@ bool PawnValidator::isEnPassantMove(ChessBoard &board, int startPos, int endPos)
     int rankDiff = endRank - startRank;
     int fileDiff = std::abs(startFile - endFile);
 
-    // // white pawn en passant
+    // white pawn en passant
     if (board.isWhiteTurn()) {
         if (rankDiff == 1 && fileDiff == 1) {
             if (endPos == enPassantSquare) {

@@ -7,6 +7,8 @@
 
 #include "ChessBoard.h"
 #include <string>
+#include <vector>
+#include <cstddef>
 
 class GameManager {
 private:
@@ -20,12 +22,19 @@ private:
     void displayTurn();
 
     // takes input from player
-    static std::string getInput(const std::string &prompt);
+    static bool getInput(const std::string &prompt, std::string &input);
 
     // processes input validation, move validation, moving pieces
     // returns true if the current player's move is successfully completed
     bool processTurn();
 
+    // display the commands available during the game
+    static void printControls();
+
+    // stores one FEN snapshot for each position reached in the current match
+    std::vector<std::string> fenHistory;
+    // identifies the snapshot currently shown after undo or redo
+    std::size_t currentFenIndex = 0;
 public:
     // ctor
     GameManager();

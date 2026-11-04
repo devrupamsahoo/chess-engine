@@ -17,7 +17,7 @@ bool PathValidator::isPathBlocked(ChessBoard &board, int startPos, int endPos) {
     // traverse the ray
     for (int square : ray) {
 
-        // reached destination
+        // stop before the destination, whose occupancy is checked separately
         if (square == endPos) {
             break;
         }

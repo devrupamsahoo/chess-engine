@@ -27,7 +27,8 @@ namespace AttackTables {
     struct AttackTableInitializer {
         AttackTableInitializer();
     };
-    
+
+    // global instance triggers attack table initialization during program startup
     extern AttackTableInitializer initializer;
 }
 
@@ -51,10 +52,10 @@ public:
     // returns true if a square is being attacked by pawns of given color
     static bool isAttackedByPawn(ChessBoard &board, int square, bool attackerIsWhite);
 
-    // returns true if a square is being attacked by rooks of given color
+    // returns true if a square is attacked by rooks or queens along ranks and files
     static bool isAttackedByRook(ChessBoard &board, int square, bool attackerIsWhite);
 
-    // returns true if a square is being attacked by bishops of given color
+    // returns true if a square is attacked by bishops or queens along diagonals
     static bool isAttackedByBishop(ChessBoard &board, int square, bool attackerIsWhite);
 
     // returns true if a square is being attacked by queens of given color

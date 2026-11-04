@@ -10,6 +10,7 @@ RayTable::RayTable() {
 }
 
 namespace {
+    // stores the rank and file step for one direction
     struct Offset {
         int dr;
         int df;
@@ -18,6 +19,7 @@ namespace {
 
 // precomputes rays for every square in every direction
 void RayTable::initializeRays() {
+    // entries follow the direction order defined in Enums.h
     constexpr Offset offsets[directionCount] = {
         { 1,  0},   // up
         {-1,  0},   // down

@@ -7,7 +7,8 @@
 
 #include <string_view>
 
-// chess piece identifiers
+// piece values are bitboard indices, so keep their order aligned with pieceToCharMap
+// number of real pieces; noPiece is a sentinel and is not a bitboard
 enum Piece {
     whitePawn,
     whiteKnight,
@@ -28,9 +29,10 @@ enum Piece {
 
 constexpr int pieceCount = 12;
 
+// FEN letters indexed by Piece value, with uppercase for white and lowercase for black
 constexpr std::string_view pieceToCharMap = "PNBRQKpnbrqk";
 
-// board square indices (a1 = 0 ... h8 = 63)
+// square values follow rank-major order: a1 = 0, each file adds 1, and each rank adds 8
 enum Square {
     a1, b1, c1, d1, e1, f1, g1, h1,
     a2, b2, c2, d2, e2, f2, g2, h2,
@@ -59,7 +61,7 @@ enum Direction {
 
 constexpr int directionCount = 8;
 
-// castling move types used by move history
+// identifies the castle recorded in a move; noCastle means the move was not castling
 enum CastlingType {
     noCastle,
     whiteKingside,

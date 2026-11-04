@@ -21,11 +21,12 @@ bool CastlingValidator::hasKingsideRights(ChessBoard &board, bool isWhitePlayer)
 bool CastlingValidator::hasQueensideRights(ChessBoard &board, bool isWhitePlayer) {
     const CastlingRights &r = board.getCastlingRights();
 
-    return isWhitePlayer ? r.wq : r.bq;
+    return  isWhitePlayer ? r.wq : r.bq;
 }
 
 // returns true if all specified squares are safe from enemy attacks
 bool CastlingValidator::areSquaresSafeFromAttack(ChessBoard &board, std::vector<int> &squares, bool isWhitePlayer) {
+    // check each square against attacks from the opposing side
     for (int sq : squares) {
         if (AttackValidator::isSquareUnderAttack(board, sq, !isWhitePlayer)) {
             return false;
@@ -35,7 +36,7 @@ bool CastlingValidator::areSquaresSafeFromAttack(ChessBoard &board, std::vector<
     return true;
 }
 
-// returns true if all squares between the king and rook are unoccupied
+// every square between the king and rook must be empty
 bool CastlingValidator::isPathClear(ChessBoard &board, int startPos, int endPos) {
     if (PathValidator::isPathBlocked(board, startPos, endPos)) {
         return false;
@@ -56,7 +57,7 @@ bool CastlingValidator::canCastleKingside(ChessBoard &board, bool isWhitePlayer)
         return false;
     }
 
-    // castling rights alone do not guarantee the king and rook are still home.
+    // castling rights record move history, so verify the king and rook are still on their starting squares
     int kingSquare = isWhitePlayer ? e1 : e8;
     int rookSquare = isWhitePlayer ? h1 : h8;
 
@@ -75,7 +76,7 @@ bool CastlingValidator::canCastleKingside(ChessBoard &board, bool isWhitePlayer)
         return false;
     }
 
-    // squares should not be attacked by any enemy pieces
+    // the king cannot start on, cross, or finish on a square attacked by the opponent
     std::vector<int> squares = isWhitePlayer ? std::vector<int>{e1, f1, g1} : std::vector<int>{e8, f8, g8};
 
     if (!areSquaresSafeFromAttack(board, squares, isWhitePlayer)) {
@@ -98,7 +99,7 @@ bool CastlingValidator::canCastleQueenside(ChessBoard &board, bool isWhitePlayer
         return false;
     }
 
-    // castling rights alone do not guarantee the king and rook are still home.
+    // castling rights record move history, so verify the king and rook are still on their starting squares
     int kingSquare = isWhitePlayer ? e1 : e8;
     int rookSquare = isWhitePlayer ? a1 : a8;
 

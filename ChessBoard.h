@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <array>
+#include <string>
 #include "Enums.h"
 #include "Structs.h"
 #include "MoveHistory.h"
@@ -33,6 +34,12 @@ private:
     // en passant
     int enPassantTarget = -1;
 
+    // plies since the last pawn move or capture, used by FEN
+    int halfmoveClock = 0;
+
+    // FEN move number, incremented after Black moves
+    int fullmoveNumber = 1;
+
     // object to keep track of move history
     MoveHistory moveHistory;
 public:
@@ -50,11 +57,7 @@ public:
     // update occupancy bitboards
     void updateOccupancy();
 
-    // prints entire board
-    void printBoard();
 
-    // prints one bitboard
-    void printBitboard(Piece pieceType);
 
     // returns true if it is White's turn
     bool isWhiteTurn();
@@ -83,20 +86,35 @@ public:
     // updates king position
     void updateKingPosition();
 
-    // makes a move and stores the history
-    void makeMove(int startPos, int endPos, Piece promotedPiece = noPiece);
+    // apply a move and record the state needed to undo or redo it
+    void makeMove(int startPos, int endPos, Piece promotedPiece = noPiece, bool isSimulation = false);
 
-    // undo a move and delete its history
-    void undoMove();
+    // restore the previous position and save the move for redo when this is a real undo
+    void undoMove(bool isSimulation = false);
+
+    // report whether the move history contains a move to undo
+    bool canUndo() const;
+
+    // report whether the redo history contains a move to replay
+    bool canRedo() const;
+
+    // performs redo
+    void redoMove();
 
     // returns the current castling rights
     const CastlingRights& getCastlingRights() const;
 
-    // executes a castling move
+    // validate and execute castling, then save the resulting position state for undo and redo
     bool executeCastle(int startPos, int endPos, bool isWhitePlayer);
 
     // returns the current en passant target square
     int getEnPassantTarget() const;
+
+    // returns the current position and move state as a FEN string
+    std::string toFen() const;
+
+    // loads the position from FEN if the entire string is valid
+    bool loadFen(const std::string& fen);
 
     // dtor
     ~ChessBoard() = default;

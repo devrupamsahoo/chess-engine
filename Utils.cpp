@@ -47,3 +47,4 @@ int Utils::coordinateToPosition(const std::string &position) {
 
     return (rank * 8) + file;
 }
+

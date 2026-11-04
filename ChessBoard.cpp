@@ -5,10 +5,14 @@
 #include "ChessBoard.h"
 #include "Utils.h"
 #include <iostream>
-
 #include "CastlingValidator.h"
 #include "MoveHistory.h"
 #include "PieceOwnership.h"
+#include <charconv>
+#include <functional>
+#include <sstream>
+#include <system_error>
+#include <bit>
 
 ChessBoard::ChessBoard() {
 
@@ -72,68 +76,7 @@ uint64_t ChessBoard::getAllOccupancy() const {
     return allOccupancy;
 }
 
-// prints entire board
-void ChessBoard::printBoard() {
 
-    std::cout << std::endl;
-    std::cout << "         BLACK" << std::endl;
-    std::cout << "    a b c d e f g h" << std::endl;
-    std::cout << "   -----------------" << std::endl;
-
-    for (int rank = 8; rank > 0; rank--) {
-        std::cout << rank << " | ";
-
-        for (int file = 8; file > 0; file--) {
-            int square = 8*(rank-1) + (8-file);
-            // empty by default
-            char squareChar = '.';
-
-            // scans 12 bitboards if a piece exists on the square
-            for (int p = 0; p < pieceCount; p++) {
-                // pass the specific uint64_t bitboard to checkBit
-                if (Utils::checkBit(board[p], square)) {
-                    squareChar = pieceToCharMap[p];
-                    break;
-                }
-            }
-            std::cout << squareChar << " ";
-        }
-        std::cout << "| " << rank << std::endl;
-    }
-
-    std::cout << "   -----------------" << std::endl;
-    std::cout << "    a b c d e f g h" << std::endl;
-    std::cout << "         WHITE" << std::endl;
-}
-
-// prints one bitboard
-void ChessBoard::printBitboard(Piece pieceType) {
-    uint64_t bitboard = board[pieceType];
-
-    std::cout << std::endl;
-    std::cout << "         BLACK" << std::endl;
-    std::cout << "    a b c d e f g h" << std::endl;
-    std::cout << "   -----------------" << std::endl;
-
-    for (int rank = 7; rank >= 0; rank--) {
-        std::cout << rank+1 << " | ";
-
-        for (int file = 0; file < 8; file++) {
-            int square = 8*rank + file;
-
-            if (Utils::checkBit(bitboard, square)) {
-                std::cout << pieceToCharMap[pieceType] << " ";
-            } else {
-                std::cout << ". ";
-            }
-        }
-        std::cout << "| " << rank+1 << std::endl;
-    }
-
-    std::cout << "   -----------------" << std::endl;
-    std::cout << "    a b c d e f g h" << std::endl;
-    std::cout << "         WHITE" << std::endl;
-}
 
 // returns true if it is White's turn
 bool ChessBoard::isWhiteTurn() {
@@ -233,8 +176,8 @@ void ChessBoard::updateKingPosition() {
     blackKingPosition = __builtin_ctzll(board[blackKing]);
 }
 
-// makes a move and stores the history
-void ChessBoard::makeMove(int startPos, int endPos, Piece promotedPiece) {
+// apply a move and record the state needed to undo or redo it
+void ChessBoard::makeMove(int startPos, int endPos, Piece promotedPiece, bool isSimulation) {
     Move move;
 
     move.startSquare = startPos;
@@ -249,7 +192,22 @@ void ChessBoard::makeMove(int startPos, int endPos, Piece promotedPiece) {
     // save previous en passant target
     move.oldEnPassantTarget = enPassantTarget;
 
-    // saving the promotion piece
+    move.oldHalfmoveClock = halfmoveClock;
+    move.oldFullmoveNumber = fullmoveNumber;
+
+    // reset the halfmove clock after a pawn move or capture; otherwise increment it
+    if (move.movedPiece == whitePawn || move.movedPiece == blackPawn || move.capturedPiece != noPiece) {
+        halfmoveClock = 0;
+    } else {
+        ++halfmoveClock;
+    }
+
+    // FEN advances the fullmove number after Black's move
+    if (!whiteTurn) {
+        ++fullmoveNumber;
+    }
+
+    // retain the promoted piece so undo can restore the pawn and redo can restore the promotion
     move.promotedPiece = promotedPiece;
 
     // execute en passant capture
@@ -344,20 +302,36 @@ void ChessBoard::makeMove(int startPos, int endPos, Piece promotedPiece) {
     // refresh occupancies
     updateOccupancy();
 
-    // save move for undo
-    moveHistory.pushMove(move);
+    // save the resulting rule state so redo can restore it exactly
+    move.newCastlingRights = castlingRights;
+    move.newEnPassantTarget = enPassantTarget;
+
+    move.newHalfmoveClock = halfmoveClock;
+    move.newFullmoveNumber = fullmoveNumber;
+
+    // simulated moves must not clear the redo branch
+    moveHistory.pushMove(move, !isSimulation);
 }
 
-// undo a move and delete its history
-void ChessBoard::undoMove() {
-    // pops the last move from stack
+// restore the previous position and save the move for redo when this is a real undo
+void ChessBoard::undoMove(bool isSimulation) {
+    // remove the latest move from history so its saved state can be restored
     Move move = moveHistory.popMove();
+
+    // legality checks undo a temporary move without adding it to redo history
+    if (!isSimulation) {
+        moveHistory.pushRedoMove(move);
+    }
 
     // restore castling rights
     castlingRights = move.oldCastlingRights;
 
     // restore old en passant target
     enPassantTarget = move.oldEnPassantTarget;
+
+    // restore the FEN move counters to their values before the move
+    halfmoveClock = move.oldHalfmoveClock;
+    fullmoveNumber = move.oldFullmoveNumber;
 
     // a promoted pawn ends the move as a different piece than it started.
     Piece pieceAtDestination = move.promotedPiece != noPiece ? move.promotedPiece : move.movedPiece;
@@ -401,12 +375,72 @@ void ChessBoard::undoMove() {
     updateOccupancy();
 }
 
+// report whether the move history contains a move to undo
+bool ChessBoard::canUndo() const {
+    return moveHistory.canUndo();
+}
+
+// report whether the redo history contains a move to replay
+bool ChessBoard::canRedo() const {
+    return moveHistory.canRedo();
+}
+
+// performs redo
+void ChessBoard::redoMove() {
+    Move move = moveHistory.popRedoMove();
+
+    // replay castling by moving both the king and its rook
+    if (move.castlingType == whiteKingside) {
+        movePiece(e1, g1);
+        movePiece(h1, f1);
+    } else if (move.castlingType == whiteQueenside) {
+        movePiece(e1, c1);
+        movePiece(a1, d1);
+    } else if (move.castlingType == blackKingside) {
+        movePiece(e8, g8);
+        movePiece(h8, f8);
+    } else if (move.castlingType == blackQueenside) {
+        movePiece(e8, c8);
+        movePiece(a8, d8);
+    } else {
+        // en passant removes the captured pawn from the square behind the destination
+        if (move.isEnPassantCapture) {
+            int capturedPawnPos = (move.movedPiece == whitePawn) ? move.endSquare - 8 : move.endSquare + 8;
+
+            Utils::clearBit(getPieceBitboard(move.capturedPiece), capturedPawnPos);
+        } else if (move.capturedPiece != noPiece) {
+            Utils::clearBit(getPieceBitboard(move.capturedPiece), move.endSquare);
+        }
+
+        // move the piece and place its promoted type when the saved move was a promotion
+        Utils::clearBit(getPieceBitboard(move.movedPiece), move.startSquare);
+
+        Piece pieceToPlace = move.promotedPiece != noPiece ? move.promotedPiece : move.movedPiece;
+        Utils::setBit(getPieceBitboard(pieceToPlace), move.endSquare);
+
+        if (move.movedPiece == whiteKing || move.movedPiece == blackKing) {
+            updateKingPosition();
+        }
+
+        updateOccupancy();
+    }
+
+    // restore castling, en passant, and move-counter state from after the original move
+    castlingRights = move.newCastlingRights;
+    enPassantTarget = move.newEnPassantTarget;
+
+    halfmoveClock = move.newHalfmoveClock;
+    fullmoveNumber = move.newFullmoveNumber;
+
+    moveHistory.pushRedoneMove(move);
+}
+
 // returns the current castling rights
 const CastlingRights& ChessBoard::getCastlingRights() const {
     return castlingRights;
 }
 
-// executes a castling move
+// validate and execute castling, then save the resulting position state for undo and redo
 bool ChessBoard::executeCastle(int startPos, int endPos, bool isWhitePlayer) {
     Move move;
 
@@ -419,6 +453,9 @@ bool ChessBoard::executeCastle(int startPos, int endPos, bool isWhitePlayer) {
     // save current castling state
     move.oldCastlingRights = castlingRights;
     move.oldEnPassantTarget = enPassantTarget;
+
+    move.oldHalfmoveClock = halfmoveClock;
+    move.oldFullmoveNumber = fullmoveNumber;
 
     // whiteside
     if (isWhitePlayer) {
@@ -433,6 +470,7 @@ bool ChessBoard::executeCastle(int startPos, int endPos, bool isWhitePlayer) {
                 return false;
             }
 
+            // require the rook to be present before moving it
             if (getPieceAt(h1) != whiteRook) {
                 return false;
             }
@@ -460,7 +498,8 @@ bool ChessBoard::executeCastle(int startPos, int endPos, bool isWhitePlayer) {
         }else {
             return false;
         }
-    } else { // black side
+    } else {
+        // black side
         if (startPos != e8 || getPieceAt(startPos) != blackKing) {
             return false;
         }
@@ -511,6 +550,20 @@ bool ChessBoard::executeCastle(int startPos, int endPos, bool isWhitePlayer) {
         castlingRights.bk = false;
         castlingRights.bq = false;
     }
+
+    move.newCastlingRights = castlingRights;
+
+    // castling is a king move without a capture, so increment the halfmove clock
+    ++halfmoveClock;
+
+    if (!isWhitePlayer) {
+        ++fullmoveNumber;
+    }
+
+    move.newEnPassantTarget = enPassantTarget;
+
+    move.newHalfmoveClock = halfmoveClock;
+    move.newFullmoveNumber = fullmoveNumber;
 
     // save move for undo
     moveHistory.pushMove(move);

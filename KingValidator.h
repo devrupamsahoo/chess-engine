@@ -18,6 +18,7 @@ public:
 
     // returns true if the move leaves the current player's king in check
     static bool leavesKingInCheck(ChessBoard &board, int startPos, int endPos);
+
 };
 
 

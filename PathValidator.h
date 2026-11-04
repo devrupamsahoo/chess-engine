@@ -10,8 +10,9 @@
 
 class PathValidator {
 public:
-    // returns true if any piece blocks the path between startPos and endPos
+    // returns true if a piece occupies a square strictly between startPos and endPos
     static bool isPathBlocked(ChessBoard &board, int startPos, int endPos);
+
 };
 
 

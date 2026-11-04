@@ -20,7 +20,7 @@ public:
     // returns true if a move is diagonal
     static bool isDiagonalMove(int startPos, int endPos);
 
-    // returns the direction a piece is trying to move
+    // returns the sliding direction, or throws if the squares are not aligned
     static Direction getMoveDirection(int startPos, int endPos);
 };
 

@@ -10,6 +10,7 @@
 
 class RayTable {
 private:
+    // stores each ray from the nearest square outward, excluding its source square
     std::vector<int> rays[squareCount][directionCount];
 
     // precomputes rays for every square in every direction
@@ -18,7 +19,7 @@ public:
     // ctor
     RayTable();
 
-    // returns the precomputed ray from the given square and direction
+    // returns squares along a direction from nearest to farthest
     const std::vector<int>& getRay(int square, Direction direction) const;
 
     // dtor

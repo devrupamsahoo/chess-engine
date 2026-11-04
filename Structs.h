@@ -8,7 +8,7 @@
 #include "Enums.h"
 
 
-// stores castling rights
+// wk/wq and bk/bq represent White/Black kingside/queenside castling rights
 struct CastlingRights {
     bool wk = true;
     bool wq = true;
@@ -16,7 +16,7 @@ struct CastlingRights {
     bool bq = true;
 };
 
-// stores all information required to undo a move
+// stores the move and state needed for undo and redo
 struct Move {
     int startSquare;
     int endSquare;
@@ -27,10 +27,23 @@ struct Move {
     Piece promotedPiece = noPiece;
 
     CastlingType castlingType = noCastle;
-    CastlingRights oldCastlingRights;
 
+    // preserve castling rights before and after the move for undo and redo
+    CastlingRights oldCastlingRights;
+    CastlingRights newCastlingRights;
+
+    // preserve the en passant target before and after the move for undo and redo
     int oldEnPassantTarget = -1;
+    int newEnPassantTarget = -1;
+
+    // marks captures where the captured pawn is not on the destination square
     bool isEnPassantCapture = false;
+
+    // preserve FEN move counters before and after the move for undo and redo
+    int oldHalfmoveClock = 0;
+    int newHalfmoveClock = 0;
+    int oldFullmoveNumber = 1;
+    int newFullmoveNumber = 1;
 };
 
 

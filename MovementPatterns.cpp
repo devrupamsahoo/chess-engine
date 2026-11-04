@@ -6,6 +6,7 @@
 
 // returns true if a move is horizontal
 bool MovementPatterns::isHorizontalMove(int startPos, int endPos) {
+    // the start and end squares must be different
     if (startPos == endPos) {
         return false;
     }
@@ -15,6 +16,7 @@ bool MovementPatterns::isHorizontalMove(int startPos, int endPos) {
 
 // returns true if a move is vertical
 bool MovementPatterns::isVerticalMove(int startPos, int endPos) {
+    // the start and end squares must be different
     if (startPos == endPos) {
         return false;
     }
@@ -24,6 +26,7 @@ bool MovementPatterns::isVerticalMove(int startPos, int endPos) {
 
 // returns true if a move is diagonal
 bool MovementPatterns::isDiagonalMove(int startPos, int endPos) {
+    // the start and end squares must be different
     if (startPos == endPos) {
         return false;
     }
@@ -78,5 +81,6 @@ Direction MovementPatterns::getMoveDirection(int startPos, int endPos) {
         return downLeft;
     }
 
+    // only straight and diagonal moves have a sliding direction
     throw std::invalid_argument("Move has no sliding direction.");
 }

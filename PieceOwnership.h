@@ -17,6 +17,7 @@ public:
 
     // returns true if the specified square contains an enemy piece
     static bool isEnemyPiece(ChessBoard &board, int square);
+
 };
 
 

@@ -34,4 +34,8 @@ add_executable(chess_engine main.cpp
         AttackValidator.h
         Structs.cpp
         Structs.h
+        FEN.cpp
+        FEN.h
+        DisplayBoard.cpp
+        DisplayBoard.h
 )

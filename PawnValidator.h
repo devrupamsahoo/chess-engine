@@ -15,20 +15,21 @@ public:
     // returns true if the pawn can move two squares forward from its starting rank
     static bool isPawnInitialDoubleMove(ChessBoard &board, int startPos, int endPos);
 
-    // master pawn validator: returns true if the pawn move is legal
+    // returns true if the pawn follows its movement and capture rules
     static bool isPawnMove(ChessBoard &board, int startPos, int endPos);
 
     // returns true if pawn can capture diagonally
     static bool isPawnCaptureMove(ChessBoard &board, int startPos, int endPos);
 
-    // returns true if en passant move is allowed
+    // returns true if the pawn moves diagonally to the current en passant target
     static bool isEnPassantMove(ChessBoard &board, int startPos, int endPos);
 
-    // returns true if a move is promotion
+    // returns true if this side's pawn reaches its promotion rank
     static bool isPawnPromotion(int endPos, bool whitePlayer);
 
     // promotes a pawn that has reached the last rank
     static void promotePawn(ChessBoard &board, int endPos, char promotedPieceChar, bool isWhitePlayer);
+
 };
 
 

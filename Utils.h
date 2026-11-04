@@ -20,6 +20,7 @@ namespace Utils {
 
     // converts board coordinates into a square index
     int coordinateToPosition(const std::string &position);
+
 }
 
 

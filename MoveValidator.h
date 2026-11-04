@@ -18,6 +18,7 @@ public:
 
     // master move validator function: returns true if the move is legal for the selected piece
     static bool isValidMove(ChessBoard &board, int startPos, int endPos);
+
 };
 
 

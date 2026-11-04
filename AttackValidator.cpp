@@ -14,18 +14,18 @@ namespace AttackTables {
     // pawnAttacks[0] for white pawns, pawnAttacks[1] for black pawns
     uint64_t PawnAttacks[2][64] = {0};
 
-    // define the initializer
+    // initializes all attack lookup tables before they are used
     AttackTableInitializer::AttackTableInitializer() {
         AttackValidator::initKnightAttacks();
         AttackValidator::initKingAttacks();
         AttackValidator::initPawnAttacks();
     }
 
-    // create the global instance
+    // global instance triggers attack table initialization during program startup
     AttackTableInitializer initializer;
 }
 
-// initializes knight attack table computation
+// build a mask of every square a knight attacks from each board square
 void AttackValidator::initKnightAttacks() {
     // step values for all eight possible knight moves
     int dr[8] = {2, 2, -2, -2, 1, 1, -1, -1};
@@ -36,6 +36,7 @@ void AttackValidator::initKnightAttacks() {
         // attack mask for the square
         uint64_t attacks = 0;
 
+        // converts the square index into its corresponding rank and file
         int rank = square >> 3;
         int file = square & 7;
 
@@ -46,6 +47,7 @@ void AttackValidator::initKnightAttacks() {
 
             // ignores moves which leaves the board
             if (newRank >= 0 && newRank < 8 && newFile >= 0 && newFile < 8) {
+
                 // computes & inserts the position into the attack mask
                 int targetSquare = newRank * 8 + newFile;
                 attacks |= (1ULL << targetSquare);
@@ -57,7 +59,7 @@ void AttackValidator::initKnightAttacks() {
     }
 }
 
-// initializes king attack table computation
+// build a mask of every square a king attacks from each board square
 void AttackValidator::initKingAttacks() {
     // step values for all eight possible king moves
     int dr[8] = {1, -1, -1, 1, 1, 0, -1, 0};
@@ -90,7 +92,7 @@ void AttackValidator::initKingAttacks() {
     }
 }
 
-// initializes pawn attack table computation
+// build diagonal attack masks for white and black pawns from each board square
 void AttackValidator::initPawnAttacks() {
     // generates attack mask for every square in board
     for (int square = 0; square < 64; square++) {
@@ -152,7 +154,8 @@ void AttackValidator::initPawnAttacks() {
 // returns true if a square is being attacked by knights of given color
 bool AttackValidator::isAttackedByKnight(ChessBoard &board, int square, bool attackerIsWhite) {
     // gets the bitboard containing all knights of the specified color
-    uint64_t knights = attackerIsWhite ? board.getPieceBitboard(whiteKnight) : board.getPieceBitboard(blackKnight);
+    uint64_t knights = attackerIsWhite ? board.getPieceBitboard(whiteKnight) :
+                                         board.getPieceBitboard(blackKnight);
 
     // iterate through every knight on the board
     while (knights) {
@@ -178,7 +181,8 @@ bool AttackValidator::isAttackedByKnight(ChessBoard &board, int square, bool att
 // returns true if a square is being attacked by king of given color
 bool AttackValidator::isAttackedByKing(ChessBoard &board, int square, bool attackerIsWhite) {
     // gets the bitboard containing all kings of the specified color
-    uint64_t kings = attackerIsWhite ? board.getPieceBitboard(whiteKing) : board.getPieceBitboard(blackKing);
+    uint64_t kings = attackerIsWhite ? board.getPieceBitboard(whiteKing) :
+                                       board.getPieceBitboard(blackKing);
 
     // iterate through king on the board
     while (kings) {
@@ -203,9 +207,13 @@ bool AttackValidator::isAttackedByKing(ChessBoard &board, int square, bool attac
 
 // returns true if a square is being attacked by pawns of given color
 bool AttackValidator::isAttackedByPawn(ChessBoard &board, int square, bool attackerIsWhite) {
-    uint64_t pawns = attackerIsWhite ? board.getPieceBitboard(whitePawn) : board.getPieceBitboard(blackPawn);
+    uint64_t pawns = attackerIsWhite ? board.getPieceBitboard(whitePawn) :
+                                       board.getPieceBitboard(blackPawn);
+
+    // selects the corresponding pawn attack table based on color
     int color = attackerIsWhite ? 0 : 1;
 
+    // checks every pawn using its precomputed attack mask
     while (pawns) {
 
         int pawnSquare = __builtin_ctzll(pawns);
@@ -223,11 +231,12 @@ bool AttackValidator::isAttackedByPawn(ChessBoard &board, int square, bool attac
 
 // returns true if a square is being attacked by rooks of given color
 bool AttackValidator::isAttackedByRook(ChessBoard &board, int square, bool attackerIsWhite) {
+    // gets all occupied squares to detect pieces blocking sliding attacks
     uint64_t occupancy = board.getAllOccupancy();
 
     // queen also behaves like rook
-    uint64_t rooks = attackerIsWhite ? (board.getPieceBitboard(whiteRook) | board.getPieceBitboard(whiteQueen))
-                            : (board.getPieceBitboard(blackRook) | board.getPieceBitboard(blackQueen));
+    uint64_t rooks = attackerIsWhite ? (board.getPieceBitboard(whiteRook) | board.getPieceBitboard(whiteQueen)) :
+                                       (board.getPieceBitboard(blackRook) | board.getPieceBitboard(blackQueen));
 
     // loop through all rooks and queen
     while (rooks) {
@@ -266,9 +275,10 @@ bool AttackValidator::isAttackedByBishop(ChessBoard &board, int square, bool att
     uint64_t occupancy = board.getAllOccupancy();
 
     // queen also behaves like bishop
-    uint64_t bishops = attackerIsWhite ? (board.getPieceBitboard(whiteBishop) | board.getPieceBitboard(whiteQueen))
-                                : (board.getPieceBitboard(blackBishop) | board.getPieceBitboard(blackQueen));
+    uint64_t bishops = attackerIsWhite ? (board.getPieceBitboard(whiteBishop) | board.getPieceBitboard(whiteQueen)) :
+                                         (board.getPieceBitboard(blackBishop) | board.getPieceBitboard(blackQueen));
 
+    // checks only the four diagonal directions
     Direction dirs[4] = {upLeft, upRight, downLeft, downRight};
 
     while (bishops) {
@@ -276,6 +286,7 @@ bool AttackValidator::isAttackedByBishop(ChessBoard &board, int square, bool att
         int bishopSquare = __builtin_ctzll(bishops);
         bishops &= bishops - 1;
 
+        // checks each diagonal ray until the target is reached or a piece blocks the path
         for (int i = 0; i < 4; i++) {
 
             const std::vector<int> &ray = AttackTables::rayTable.getRay(bishopSquare, dirs[i]);
@@ -318,6 +329,7 @@ bool AttackValidator::isAttackedByQueen(ChessBoard &board, int square, bool atta
 // returns true if a square is being attacked by pieces of given color
 bool AttackValidator::isSquareUnderAttack(ChessBoard &board, int square, bool attackerIsWhite) {
 
+    // checks each piece type until one confirms an attack on the target square
     if (isAttackedByPawn(board, square, attackerIsWhite)) {
         return true;
     }
@@ -330,15 +342,13 @@ bool AttackValidator::isSquareUnderAttack(ChessBoard &board, int square, bool at
         return true;
     }
 
+    // rook and bishop scans also include queens, so a separate queen scan would repeat both rays
     if (isAttackedByBishop(board, square, attackerIsWhite)) {
         return true;
     }
 
+    // rook and bishop scans also include queens, so a separate queen scan would repeat both rays
     if (isAttackedByRook(board, square, attackerIsWhite)) {
-        return true;
-    }
-
-    if (isAttackedByQueen(board, square, attackerIsWhite)) {
         return true;
     }
 

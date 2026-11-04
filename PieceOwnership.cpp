@@ -49,3 +49,4 @@ bool PieceOwnership::isOwnPiece(ChessBoard &board, int square) {
 bool PieceOwnership::isEmptySquare(ChessBoard &board, int square) {
     return !Utils::checkBit(board.getAllOccupancy(), square);
 }
+
