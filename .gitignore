@@ -4,6 +4,7 @@
 # CMake build folders
 cmake-build-debug/
 cmake-build-release/
+cmake-build-qt-gui/
 
 # Compiled files (Windows / MinGW)
 *.exe

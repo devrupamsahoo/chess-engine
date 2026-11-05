@@ -5,6 +5,7 @@
 #include "chess/notation/FEN.h"
 #include "chess/core/ChessBoard.h"
 #include "chess/core/Utils.h"
+#include "chess/move/KingValidator.h"
 
 #include <bit>
 #include <charconv>
@@ -13,7 +14,7 @@
 #include <system_error>
 
 // serialize the current board state into the six FEN fields
-std::string FEN::serialize(const ChessBoard& board) {
+std::string FEN::serialize(const ChessBoard &board) {
     std::string fen;
 
     // piece placement, starting from rank 8 and moving down to rank 1
@@ -27,7 +28,7 @@ std::string FEN::serialize(const ChessBoard& board) {
             Piece piece = noPiece;
 
             // find which piece occupies this square
-            for (int p = 0; p<pieceCount; ++p) {
+            for (int p = 0; p < pieceCount; ++p) {
                 if (Utils::checkBit(board.board[p], square)) {
                     piece = static_cast<Piece>(p);
                     break;
@@ -46,7 +47,6 @@ std::string FEN::serialize(const ChessBoard& board) {
 
                 fen += pieceToCharMap[piece];
             }
-
         }
 
         if (emptySquares > 0) {
@@ -90,7 +90,7 @@ std::string FEN::serialize(const ChessBoard& board) {
     // write the en passant target square, or '-' when no target is available
     if (board.enPassantTarget == -1) {
         fen += '-';
-    }else {
+    } else {
         fen += static_cast<char>('a' + board.enPassantTarget % 8);
         fen += static_cast<char>('1' + board.enPassantTarget / 8);
     }
@@ -106,7 +106,7 @@ std::string FEN::serialize(const ChessBoard& board) {
 }
 
 // parse and validate a FEN string before replacing the current board state
-bool FEN::load(ChessBoard& board, const std::string& fen) {
+bool FEN::load(ChessBoard &board, const std::string &fen) {
     std::istringstream fenStream(fen);
 
     std::string placement;
@@ -118,7 +118,8 @@ bool FEN::load(ChessBoard& board, const std::string& fen) {
     std::string extra;
 
     // FEN must contain exactly six fields
-    if (!(fenStream >> placement >> activeColor >> castling >> enPassant >> halfmoveText >> fullmoveText) || (fenStream >> extra)) {
+    if (!(fenStream >> placement >> activeColor >> castling >> enPassant >> halfmoveText >> fullmoveText) || (
+            fenStream >> extra)) {
         return false;
     }
 
@@ -126,16 +127,17 @@ bool FEN::load(ChessBoard& board, const std::string& fen) {
     int parsedFullmoveNumber = 0;
 
     // parse each move counter completely and reject invalid or out-of-range values
-    std::function parseNumber = [](const std::string& text, int& value) {
-        const char* first = text.data();
-        const char* last = first + text.size();
-        const  std::from_chars_result result = std::from_chars(first, last, value);
+    std::function parseNumber = [](const std::string &text, int &value) {
+        const char *first = text.data();
+        const char *last = first + text.size();
+        const std::from_chars_result result = std::from_chars(first, last, value);
 
         return result.ec == std::errc{} && result.ptr == last;
     };
 
     // the halfmove clock cannot be negative and the fullmove number must start at 1
-    if (!parseNumber(halfmoveText, parsedHalfmoveClock) || !parseNumber(fullmoveText, parsedFullmoveNumber) || parsedHalfmoveClock < 0 || parsedFullmoveNumber < 1) {
+    if (!parseNumber(halfmoveText, parsedHalfmoveClock) || !parseNumber(fullmoveText, parsedFullmoveNumber) ||
+        parsedHalfmoveClock < 0 || parsedFullmoveNumber < 1) {
         return false;
     }
 
@@ -146,7 +148,7 @@ bool FEN::load(ChessBoard& board, const std::string& fen) {
     bool previousWasDigit = false;
 
     // read the placement field from rank 8 down to rank 1, tracking the next file on each rank
-    for (char symbol : placement) {
+    for (char symbol: placement) {
         // each rank separator is valid only after exactly eight squares were described
         if (symbol == '/') {
             if (file != 8 || rank == 0) {
@@ -189,7 +191,7 @@ bool FEN::load(ChessBoard& board, const std::string& fen) {
             return false;
         }
 
-        Utils::setBit(parsedBoard[pieceIndex], rank*8 + file);
+        Utils::setBit(parsedBoard[pieceIndex], rank * 8 + file);
         ++file;
 
         previousWasDigit = false;
@@ -215,7 +217,7 @@ bool FEN::load(ChessBoard& board, const std::string& fen) {
 
     // parse each castling right and reject unknown or repeated rights
     if (castling != "-") {
-        for (char right : castling) {
+        for (char right: castling) {
             switch (right) {
                 case 'K':
                     if (parsedCastlingRights.wk) return false;
@@ -239,6 +241,22 @@ bool FEN::load(ChessBoard& board, const std::string& fen) {
         }
     }
 
+    // castling rights require the king and rook to remain on their home squares
+    if ((parsedCastlingRights.wk &&
+         (!Utils::checkBit(parsedBoard[whiteKing], e1)
+          || !Utils::checkBit(parsedBoard[whiteRook], h1)))
+        || (parsedCastlingRights.wq &&
+            (!Utils::checkBit(parsedBoard[whiteKing], e1)
+             || !Utils::checkBit(parsedBoard[whiteRook], a1)))
+        || (parsedCastlingRights.bk &&
+            (!Utils::checkBit(parsedBoard[blackKing], e8)
+             || !Utils::checkBit(parsedBoard[blackRook], h8)))
+        || (parsedCastlingRights.bq &&
+            (!Utils::checkBit(parsedBoard[blackKing], e8)
+             || !Utils::checkBit(parsedBoard[blackRook], a8)))) {
+        return false;
+    }
+
     int parsedEnPassantTarget = -1;
 
     // validate the target coordinate and rank for the side to move
@@ -247,12 +265,12 @@ bool FEN::load(ChessBoard& board, const std::string& fen) {
             || enPassant[0] < 'a' || enPassant[0] > 'h'
             || enPassant[1] < '1' || enPassant[1] > '8') {
             return false;
-            }
+        }
 
         if ((parsedWhiteTurn && enPassant[1] != '6')
             || (!parsedWhiteTurn && enPassant[1] != '3')) {
             return false;
-            }
+        }
 
         parsedEnPassantTarget = Utils::coordinateToPosition(enPassant);
     }
@@ -261,7 +279,71 @@ bool FEN::load(ChessBoard& board, const std::string& fen) {
     if (std::popcount(parsedBoard[whiteKing]) != 1
         || std::popcount(parsedBoard[blackKing]) != 1) {
         return false;
-        }
+    }
+
+    // kings cannot occupy neighboring squares
+    const int whiteKingSquare = std::countr_zero(parsedBoard[whiteKing]);
+    const int blackKingSquare = std::countr_zero(parsedBoard[blackKing]);
+
+    const int rankDifference =
+            whiteKingSquare / 8 - blackKingSquare / 8;
+    const int fileDifference =
+            whiteKingSquare % 8 - blackKingSquare % 8;
+
+    const int rankDistance =
+            rankDifference < 0 ? -rankDifference : rankDifference;
+    const int fileDistance =
+            fileDifference < 0 ? -fileDifference : fileDifference;
+
+    if (rankDistance <= 1 && fileDistance <= 1) {
+        return false;
+    }
+
+    // neither side can have more pieces or pawns than it started with
+    if (std::popcount(parsedBoard[whitePawn]) > 8
+        || std::popcount(parsedBoard[blackPawn]) > 8) {
+        return false;
+    }
+
+    int whitePieceCount = 0;
+    int blackPieceCount = 0;
+
+    for (int piece = whitePawn; piece <= whiteKing; ++piece) {
+        whitePieceCount += std::popcount(parsedBoard[piece]);
+    }
+
+    for (int piece = blackPawn; piece <= blackKing; ++piece) {
+        blackPieceCount += std::popcount(parsedBoard[piece]);
+    }
+
+    if (whitePieceCount > 16 || blackPieceCount > 16) {
+        return false;
+    }
+
+    // estimates the minimum number of promotions needed beyond the starting material
+    const auto extraPieces = [](int count, int startingCount) {
+        return count > startingCount ? count - startingCount : 0;
+    };
+
+    const int whitePawnCount = std::popcount(parsedBoard[whitePawn]);
+    const int blackPawnCount = std::popcount(parsedBoard[blackPawn]);
+
+    const int whiteRequiredPromotions =
+            extraPieces(std::popcount(parsedBoard[whiteQueen]), 1)
+            + extraPieces(std::popcount(parsedBoard[whiteRook]), 2)
+            + extraPieces(std::popcount(parsedBoard[whiteBishop]), 2)
+            + extraPieces(std::popcount(parsedBoard[whiteKnight]), 2);
+
+    const int blackRequiredPromotions =
+            extraPieces(std::popcount(parsedBoard[blackQueen]), 1)
+            + extraPieces(std::popcount(parsedBoard[blackRook]), 2)
+            + extraPieces(std::popcount(parsedBoard[blackBishop]), 2)
+            + extraPieces(std::popcount(parsedBoard[blackKnight]), 2);
+
+    if (whiteRequiredPromotions > 8 - whitePawnCount
+        || blackRequiredPromotions > 8 - blackPawnCount) {
+        return false;
+    }
 
     // the en passant target must be empty and the pawn that moved must be behind it
     if (parsedEnPassantTarget != -1) {
@@ -272,12 +354,28 @@ bool FEN::load(ChessBoard& board, const std::string& fen) {
         }
 
         int movedPawnSquare = parsedWhiteTurn
-            ? parsedEnPassantTarget - 8
-            : parsedEnPassantTarget + 8;
+                                  ? parsedEnPassantTarget - 8
+                                  : parsedEnPassantTarget + 8;
 
         Piece movedPawn = parsedWhiteTurn ? blackPawn : whitePawn;
 
         if (!Utils::checkBit(parsedBoard[movedPawn], movedPawnSquare)) {
+            return false;
+        }
+
+        // the pawn's starting square must be empty after its double move
+        const int pawnStartSquare = parsedWhiteTurn
+                                        ? parsedEnPassantTarget + 8
+                                        : parsedEnPassantTarget - 8;
+
+        for (int p = 0; p < pieceCount; ++p) {
+            if (Utils::checkBit(parsedBoard[p], pawnStartSquare)) {
+                return false;
+            }
+        }
+
+        // a double pawn move resets the halfmove clock
+        if (parsedHalfmoveClock != 0) {
             return false;
         }
     }
@@ -293,6 +391,11 @@ bool FEN::load(ChessBoard& board, const std::string& fen) {
 
     parsedPosition.updateOccupancy();
     parsedPosition.updateKingPosition();
+
+    // the side that just moved cannot leave its own king in check
+    if (KingValidator::isKingInCheck(parsedPosition, !parsedWhiteTurn)) {
+        return false;
+    }
 
     board = parsedPosition;
 

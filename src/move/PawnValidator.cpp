@@ -6,8 +6,6 @@
 #include "chess/move/PieceOwnership.h"
 #include "chess/core/Utils.h"
 
-#include <iostream>
-
 // returns true if pawn is moving forward one step
 bool PawnValidator::isPawnForwardMove(ChessBoard &board, int startPos, int endPos) {
     // pawn cannot move forward into an occupied square

@@ -2,8 +2,6 @@
 // Created by sahoo on 23-06-2026.
 //
 
-#include <iostream>
-
 #include "chess/move/MoveValidator.h"
 #include "chess/move/CastlingValidator.h"
 #include "chess/move/PieceOwnership.h"
@@ -11,40 +9,6 @@
 #include "chess/move/PawnValidator.h"
 #include "chess/move/KingValidator.h"
 #include "chess/move/PathValidator.h"
-
-// returns true if the input position is valid
-bool MoveValidator::isValidPosition(const std::string &position) {
-
-    // validates standard 4-character moves eg. e2e4
-    if (position.length() == 4) {
-        if (position[0] >= 'a' && position[0] <= 'h' &&
-            position[2] >= 'a' && position[2] <= 'h') {
-
-            if (position[1] >= '1' && position[1] <= '8' &&
-                position[3] >= '1' && position[3] <= '8') {
-                return true;
-                }
-            }
-    }
-
-    // validates 5-character promotion moves eg. e7e8q
-    if (position.length() == 5) {
-        if (position[0] >= 'a' && position[0] <= 'h' && position[2] >= 'a' && position[2] <= 'h') {
-
-            if (position[1] >= '1' && position[1] <= '8' && position[3] >= '1' && position[3] <= '8') {
-
-                char p = static_cast<char>(std::tolower(static_cast<unsigned char>(position[4])));
-
-                if (p == 'q' || p == 'r' || p == 'n' || p == 'b') {
-                    return true;
-                }
-            }
-        }
-    }
-
-    std::cout << "Not a valid position format!!" << std::endl;
-    return false;
-}
 
 // returns true if the move is a valid knight move
 bool MoveValidator::isKnightMove(int startPos, int endPos) {
@@ -68,7 +32,6 @@ bool MoveValidator::isValidMove(ChessBoard &board, int startPos, int endPos) {
 
     // enters same position twice
     if (startPos == endPos) {
-        std::cout << "Same position!!" << std::endl;
         return false;
     }
 
@@ -83,20 +46,17 @@ bool MoveValidator::isValidMove(ChessBoard &board, int startPos, int endPos) {
 
     // cannot capture the opponent's king
     if (capturedPiece == whiteKing || capturedPiece == blackKing) {
-        std::cout << "Can,t capture king!!" << std::endl;
         return false;
     }
 
     // cannot capture your own piece
     if (PieceOwnership::isOwnPiece(board, endPos)) {
-        std::cout << "Can't capture own piece!!" << std::endl;
         return false;
     }
 
     // checks move validity for pawns
     if (movingPiece == whitePawn || movingPiece == blackPawn) {
         if (!PawnValidator::isPawnMove(board, startPos, endPos)) {
-            std::cout << "Not a valid pawn move!!" << std::endl;
             return false;
         }
     }
@@ -106,12 +66,10 @@ bool MoveValidator::isValidMove(ChessBoard &board, int startPos, int endPos) {
         if (!MovementPatterns::isHorizontalMove(startPos, endPos) &&
             !MovementPatterns::isVerticalMove(startPos, endPos)) {
 
-            std::cout << "Not a valid rook move!!" << std::endl;
             return false;
         }
 
         if (PathValidator::isPathBlocked(board, startPos, endPos)) {
-            std::cout << "Path is blocked!!" << std::endl;
             return false;
         }
     }
@@ -119,12 +77,10 @@ bool MoveValidator::isValidMove(ChessBoard &board, int startPos, int endPos) {
     // checks move validity for bishops
     if (movingPiece == whiteBishop || movingPiece == blackBishop) {
         if (!MovementPatterns::isDiagonalMove(startPos, endPos)) {
-            std::cout << "Not a valid bishop move!!" << std::endl;
             return false;
         }
 
         if (PathValidator::isPathBlocked(board, startPos, endPos)) {
-            std::cout << "Path is blocked!!" << std::endl;
             return false;
         }
     }
@@ -135,12 +91,10 @@ bool MoveValidator::isValidMove(ChessBoard &board, int startPos, int endPos) {
             !MovementPatterns::isHorizontalMove(startPos, endPos) &&
             !MovementPatterns::isVerticalMove(startPos, endPos)) {
 
-            std::cout << "Not a valid queen move!!" << std::endl;
             return false;
         }
 
         if (PathValidator::isPathBlocked(board, startPos, endPos)) {
-            std::cout << "Path is blocked!!" << std::endl;
             return false;
         }
     }
@@ -148,7 +102,6 @@ bool MoveValidator::isValidMove(ChessBoard &board, int startPos, int endPos) {
     // checks move validity for knights
     if (movingPiece == whiteKnight || movingPiece == blackKnight) {
         if (!isKnightMove(startPos, endPos)) {
-            std::cout << "Not a valid knight move!!" << std::endl;
             return false;
         }
     }
@@ -169,20 +122,17 @@ bool MoveValidator::isValidMove(ChessBoard &board, int startPos, int endPos) {
                 return true;
             }
 
-            std::cout << "Illegal castling attempt!!" << std::endl;
             return false;
         }
 
         // non-castling king moves must move to an adjacent square
         if (!KingValidator::isKingMove(startPos, endPos)) {
-            std::cout << "Not a valid king move!!" << std::endl;
             return false;
         }
     }
 
     // checks if move leaves king in check
     if (KingValidator::leavesKingInCheck(board, startPos, endPos)) {
-        std::cout << "Leaves king in check!! Try another move: ";
         return false;
     }
 

@@ -1,0 +1,17 @@
+<!-- embeds the piece SVG files so the GUI can load them from the executable -->
+<RCC>
+    <qresource prefix="/pieces">
+        <file alias="wK.svg">pieces/wK.svg</file>
+        <file alias="wQ.svg">pieces/wQ.svg</file>
+        <file alias="wR.svg">pieces/wR.svg</file>
+        <file alias="wB.svg">pieces/wB.svg</file>
+        <file alias="wN.svg">pieces/wN.svg</file>
+        <file alias="wP.svg">pieces/wP.svg</file>
+        <file alias="bK.svg">pieces/bK.svg</file>
+        <file alias="bQ.svg">pieces/bQ.svg</file>
+        <file alias="bR.svg">pieces/bR.svg</file>
+        <file alias="bB.svg">pieces/bB.svg</file>
+        <file alias="bN.svg">pieces/bN.svg</file>
+        <file alias="bP.svg">pieces/bP.svg</file>
+    </qresource>
+</RCC>

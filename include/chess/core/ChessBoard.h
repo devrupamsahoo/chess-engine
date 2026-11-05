@@ -63,13 +63,13 @@ public:
 
 
     // returns true if it is White's turn
-    bool isWhiteTurn();
+    bool isWhiteTurn() const;
 
     // switches player's turn
     void switchTurn();
 
     // returns the piece occupying the specified square
-    Piece getPieceAt(int square);
+    Piece getPieceAt(int square) const;
 
     // returns true if the selected coordinate contains a piece belonging to the player whose turn it is
     bool isValidPiece(bool isWhitePlayer, int square);
@@ -84,7 +84,7 @@ public:
     const uint64_t& getPieceBitboard(Piece pieceType) const;
 
     // returns the king position
-    int getKingPos(bool isWhiteKing);
+    int getKingPos(bool isWhiteKing) const;
 
     // updates king position
     void updateKingPosition();

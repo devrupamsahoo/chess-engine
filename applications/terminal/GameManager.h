@@ -5,16 +5,13 @@
 #ifndef CHESS_ENGINE_GAMEMANAGER_H
 #define CHESS_ENGINE_GAMEMANAGER_H
 
-#include "chess/core/ChessBoard.h"
-
+#include "chess/core/GameSession.h"
 #include <string>
-#include <vector>
-#include <cstddef>
 
 class GameManager {
 private:
-    // creates chessboard object
-    ChessBoard board;
+    // manages the current game state and move history
+    GameSession session;
 
     // master flag for game loop
     bool gameIsRunning;
@@ -32,10 +29,6 @@ private:
     // display the commands available during the game
     static void printControls();
 
-    // stores one FEN snapshot for each position reached in the current match
-    std::vector<std::string> fenHistory;
-    // identifies the snapshot currently shown after undo or redo
-    std::size_t currentFenIndex = 0;
 public:
     // ctor
     GameManager();

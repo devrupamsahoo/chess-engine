@@ -27,6 +27,15 @@ enum Piece {
     noPiece
 };
 
+// describes whether the current position is ongoing or the game has ended
+enum class GameStatus {
+    ongoing,
+    check,
+    checkmate,
+    stalemate,
+    draw
+};
+
 constexpr int pieceCount = 12;
 
 // FEN letters indexed by Piece value, with uppercase for white and lowercase for black

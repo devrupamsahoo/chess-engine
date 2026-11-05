@@ -26,6 +26,9 @@ add_library(chess_core
         src/move/RayTable.cpp
 
         src/notation/FEN.cpp
+        include/chess/core/GameSession.h
+        src/core/GameSession.cpp
+
 )
 
 target_include_directories(chess_core
@@ -51,24 +54,29 @@ target_compile_definitions(chess_engine
         CHESS_ENGINE_PROJECT_DIR="${PROJECT_SOURCE_DIR}"
 )
 
-# enable with -DBUILD_QT_GUI=ON after Qt and the desktop implementation exist
-option(BUILD_QT_GUI "Build the Qt desktop application" OFF)
+option(BUILD_QT_GUI "Build the Qt desktop application" ON)
 
 if(BUILD_QT_GUI)
-    find_package(Qt6 REQUIRED COMPONENTS Widgets)
+    find_package(Qt6 REQUIRED COMPONENTS Widgets Svg)
 
     qt_standard_project_setup()
+
+    set(CMAKE_AUTORCC ON)
 
     qt_add_executable(chess_desktop
             applications/desktop/main.cpp
             applications/desktop/MainWindow.cpp
             applications/desktop/ChessBoardWidget.cpp
+            assets/resources.qrc
+            applications/desktop/PieceAssets.h
+            applications/desktop/PieceAssets.cpp
     )
 
     target_link_libraries(chess_desktop
             PRIVATE
-            chess_core
-            Qt6::Widgets
+                chess_core
+                Qt6::Widgets
+                Qt6::Svg
     )
 
     set_target_properties(chess_desktop PROPERTIES

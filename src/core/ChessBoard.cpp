@@ -79,7 +79,7 @@ uint64_t ChessBoard::getAllOccupancy() const {
 
 
 // returns true if it is White's turn
-bool ChessBoard::isWhiteTurn() {
+bool ChessBoard::isWhiteTurn() const {
     return  whiteTurn;
 }
 
@@ -89,7 +89,7 @@ void ChessBoard::switchTurn() {
 }
 
 // returns the piece occupying the specified square
-Piece ChessBoard::getPieceAt(int square) {
+Piece ChessBoard::getPieceAt(int square) const {
 
     for (int i = 0; i < 12; i++) {
         if (Utils::checkBit(board[i], square)) {
@@ -152,7 +152,7 @@ const uint64_t& ChessBoard::getPieceBitboard(Piece pieceType) const {
 }
 
 // returns the king position
-int ChessBoard::getKingPos(bool isWhiteKing) {
+int ChessBoard::getKingPos(bool isWhiteKing) const {
 
     uint64_t kingBitboard = isWhiteKing
         ? getPieceBitboard(whiteKing)

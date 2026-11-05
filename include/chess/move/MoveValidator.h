@@ -5,14 +5,10 @@
 #ifndef CHESS_ENGINE_MOVEVALIDATOR_H
 #define CHESS_ENGINE_MOVEVALIDATOR_H
 
-#include <string>
 #include "chess/core/ChessBoard.h"
 
 class MoveValidator {
 public:
-    // returns true if the input position is valid
-    static bool isValidPosition(const std::string &position);
-
     // returns true if the move is a valid knight move
     static bool isKnightMove(int startPos, int endPos);
 

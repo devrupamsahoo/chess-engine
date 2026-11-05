@@ -5,7 +5,6 @@
 #include "GameManager.h"
 #include <iostream>
 #include <cctype>
-#include "chess/move/MoveValidator.h"
 #include "chess/core/ChessBoard.h"
 #include "chess/move/KingValidator.h"
 #include "chess/move/PawnValidator.h"
@@ -16,20 +15,43 @@
 #include <algorithm>
 #include <filesystem>
 
+namespace {
+    // validates terminal move input such as e2e4 or e7e8q
+    bool isValidMoveInput(const std::string& input) {
+        if (input.length() != 4 && input.length() != 5) {
+            return false;
+        }
+
+        if (input[0] < 'a' || input[0] > 'h' ||
+            input[1] < '1' || input[1] > '8' ||
+            input[2] < 'a' || input[2] > 'h' ||
+            input[3] < '1' || input[3] > '8') {
+            return false;
+            }
+
+        if (input.length() == 4) {
+            return true;
+        }
+
+        const char promotion = static_cast<char>(
+            std::tolower(static_cast<unsigned char>(input[4])));
+
+        return promotion == 'q' || promotion == 'r' ||
+               promotion == 'b' || promotion == 'n';
+    }
+}
+
 GameManager::GameManager() {
     gameIsRunning = true;
-
-    // save the starting position as the first match snapshot
-    fenHistory.push_back(FEN::serialize(board));
 }
 
 // runs the game
 void GameManager::run() {
     printControls();
 
-    DisplayBoard::printBoard(board);
+    DisplayBoard::printBoard(session.board());
 
-    std::cout << fenHistory[currentFenIndex] << std::endl;
+    std::cout << session.currentFen() << std::endl;
 
     // game loop
     while (gameIsRunning) {
@@ -44,26 +66,16 @@ void GameManager::run() {
             printControls();
 
             // next player (opponent) after the move
-            bool isNextPlayerWhite = !board.isWhiteTurn();
+            bool isNextPlayerWhite = session.board().isWhiteTurn();
 
             // notify if the opponent's king is in check
-            if (KingValidator::isKingInCheck(board, isNextPlayerWhite)) {
+            if (session.isKingInCheck(isNextPlayerWhite)) {
                 std::cout << std::endl << (isNextPlayerWhite ? "White" : "Black") << " king is in check!" << std::endl;
             }
 
-            DisplayBoard::printBoard(board);
+            DisplayBoard::printBoard(session.board());
 
-            board.switchTurn();
-
-            // discard snapshots from a redo branch if a new move was made after undo
-            fenHistory.resize(currentFenIndex + 1);
-
-            // record the position after the move and turn switch
-            fenHistory.push_back(FEN::serialize(board));
-
-            currentFenIndex = fenHistory.size() - 1;
-
-            std::cout << fenHistory[currentFenIndex] << std::endl;
+            std::cout << session.currentFen() << std::endl;
         }
     }
 
@@ -95,41 +107,29 @@ bool GameManager::processTurn() {
 
         // undo move
         if (input == "u") {
-            if (!board.canUndo()) {
+            if (!session.undo()) {
                 std::cout << "No moves to undo!" << std::endl;
                 continue;
             }
 
-            board.undoMove();
-            board.switchTurn();
-
-            // move the displayed snapshot back to the position before the undone move
-            --currentFenIndex;
-
             system("cls");
             printControls();
-            DisplayBoard::printBoard(board);
-            std::cout << fenHistory[currentFenIndex] << std::endl;
+            DisplayBoard::printBoard(session.board());
+            std::cout << session.currentFen() << std::endl;
             return false;
         }
 
         // redo move
         if (input == "r") {
-            if (!board.canRedo()) {
+            if (!session.redo()) {
                 std::cout << "No moves to redo!" << std::endl;
                 continue;
             }
 
-            board.redoMove();
-            board.switchTurn();
-
-            // move the displayed snapshot forward to the redone position
-            ++currentFenIndex;
-
             system("cls");
             printControls();
-            DisplayBoard::printBoard(board);
-            std::cout << fenHistory[currentFenIndex] << std::endl;
+            DisplayBoard::printBoard(session.board());
+            std::cout << session.currentFen() << std::endl;
             return false;
         }
 
@@ -141,19 +141,13 @@ bool GameManager::processTurn() {
 
         // resets the game
         if (input == "x") {
-            board = ChessBoard(); // overwrites the current board with a fresh one
-
-            // discard the old match snapshots and start history from the initial position
-            fenHistory.clear();
-
-            fenHistory.push_back(FEN::serialize(board));
-            currentFenIndex = 0;
+            session.reset();
 
             system("cls");
             std::cout << "Game reset back to starting position!" << std::endl;
             printControls();
-            DisplayBoard::printBoard(board);
-            std::cout << fenHistory[currentFenIndex] << std::endl;
+            DisplayBoard::printBoard(session.board());
+            std::cout << session.currentFen() << std::endl;
             return false;         // returns false so the turn doesn't switch
         }
 
@@ -167,19 +161,16 @@ bool GameManager::processTurn() {
                 return false;
             }
 
-            if (!FEN::load(board, fen)) {
+            if (!session.loadFen(fen)) {
                 std::cout << "Invalid FEN." << std::endl;
                 continue;
             }
 
-            fenHistory.clear();
-            fenHistory.push_back(FEN::serialize(board));
-            currentFenIndex = 0;
 
             system("cls");
             printControls();
-            DisplayBoard::printBoard(board);
-            std::cout << fenHistory[currentFenIndex] << std::endl;
+            DisplayBoard::printBoard(session.board());
+            std::cout << session.currentFen() << std::endl;
             return false;
         }
 
@@ -194,7 +185,7 @@ bool GameManager::processTurn() {
             }
 
             // export snapshots in move order, including the current position
-            for (const std::string& fen : fenHistory) {
+            for (const std::string& fen : session.fenHistory()) {
                 fenFile << fen << '\n';
             }
 
@@ -210,7 +201,7 @@ bool GameManager::processTurn() {
         }
 
         // validates user input format
-        if (!MoveValidator::isValidPosition(input)) {
+        if (!isValidMoveInput(input)) {
             continue;
         }
 
@@ -221,19 +212,14 @@ bool GameManager::processTurn() {
 
         // use exactly 2 characters for coordinates
         startPos = Utils::coordinateToPosition(input.substr(0, 2));
-
-        if (!board.isValidPiece(board.isWhiteTurn(), startPos)) {
-            std::cout << "Invalid piece selected!" << std::endl;
-            continue;
-        }
-
-        // use exactly 2 characters starting at index 2
         endPos = Utils::coordinateToPosition(input.substr(2, 2));
 
-        Piece selectedPiece = board.getPieceAt(startPos);
+        Piece selectedPiece = session.board().getPieceAt(startPos);
 
-        bool isPromotionMove = (selectedPiece == whitePawn || selectedPiece == blackPawn)
-            && PawnValidator::isPawnPromotion(endPos, board.isWhiteTurn());
+        bool isPromotionMove =
+            (selectedPiece == whitePawn || selectedPiece == blackPawn) &&
+                PawnValidator::isPawnPromotion(
+                endPos, session.board().isWhiteTurn());
 
         // reject promotion choices unless a pawn is reaching its last rank
         if (input.length() == 5 && !isPromotionMove) {
@@ -241,56 +227,39 @@ bool GameManager::processTurn() {
             continue;
         }
 
-        // checks if move is legal
-        if (!MoveValidator::isValidMove(board, startPos, endPos)) {
+        Piece promotionPiece = noPiece;
+
+        // convert the promotion choice into the piece type for the moving side
+        if (isPromotionMove) {
+            const bool white = selectedPiece == whitePawn;
+
+            switch (promotedPiece) {
+                case 'q':
+                    promotionPiece = white ? whiteQueen : blackQueen;
+                    break;
+                case 'r':
+                    promotionPiece = white ? whiteRook : blackRook;
+                    break;
+                case 'b':
+                    promotionPiece = white ? whiteBishop : blackBishop;
+                    break;
+                case 'n':
+                    promotionPiece = white ? whiteKnight : blackKnight;
+                    break;
+                default: ;
+            }
+        }
+
+        // let the session validate and execute the move
+        if (!session.makeMove(startPos, endPos, promotionPiece)) {
+            std::cout << "Invalid move!" << std::endl;
             continue;
         }
 
-        break;
+        return true;
     }
-
-    Piece pieceMoved = board.getPieceAt(startPos);
-
-    // convert the promotion choice into the piece type for the moving side
-    Piece promotionPiece = noPiece;
-
-    // convert the promotion choice to the moving side's piece type for the move record
-    if ((pieceMoved == whitePawn || pieceMoved == blackPawn) && PawnValidator::isPawnPromotion(endPos, board.isWhiteTurn())) {
-        const bool white = pieceMoved == whitePawn;
-        const char choice = static_cast<char>(std::tolower(static_cast<unsigned char>(promotedPiece)));
-
-        switch (choice) {
-            case 'q':
-                promotionPiece = white ? whiteQueen : blackQueen;
-                break;
-            case 'r':
-                promotionPiece = white ? whiteRook : blackRook;
-                break;
-            case 'b':
-                promotionPiece = white ? whiteBishop : blackBishop;
-                break;
-            case 'n':
-                promotionPiece = white ? whiteKnight : blackKnight;
-                break;
-        }
-    }
-
-    // recognize castling only when the king moves between its exact home and castling squares
-    bool isCastling = (pieceMoved == whiteKing && startPos == e1 && (endPos == g1 || endPos == c1)) ||
-                      (pieceMoved == blackKing && startPos == e8 && (endPos == g8 || endPos == c8));
-
-    // castling moves the king and rook together, so execute it separately from a normal move
-    if (isCastling) {
-        if (!board.executeCastle(startPos, endPos, board.isWhiteTurn())) {
-            return false;
-        }
-    } else {
-        // moves the piece
-        board.makeMove(startPos, endPos, promotionPiece);
-    }
-
-    return true;
 }
+
 
 // takes input from player
 bool GameManager::getInput(const std::string &prompt, std::string &input) {
@@ -303,7 +272,7 @@ bool GameManager::getInput(const std::string &prompt, std::string &input) {
 // displays the current player's turn
 void GameManager::displayTurn() {
 
-    if (board.isWhiteTurn()) {
+    if (session.board().isWhiteTurn()) {
         std::cout << "White's Turn" << std::endl;
     } else {
         std::cout << "Black's Turn" << std::endl;
