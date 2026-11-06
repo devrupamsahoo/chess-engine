@@ -63,5 +63,6 @@ const std::vector<int>& RayTable::getRay(int square, Direction direction) const 
 }
 
 namespace AttackTables {
+    // provides one shared precomputed ray table for move and attack validation
     RayTable rayTable;
 }

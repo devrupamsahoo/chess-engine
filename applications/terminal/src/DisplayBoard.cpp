@@ -2,7 +2,7 @@
 // Created by devrupamsahoo on 03-11-2026.
 //
 
-#include "DisplayBoard.h"
+#include "../include/DisplayBoard.h"
 #include <iostream>
 #include "chess/core/Enums.h"
 #include "chess/core/Utils.h"
@@ -20,7 +20,9 @@ void DisplayBoard::printBoard(const ChessBoard& board) {
         std::cout << rank << " | ";
 
         for (int file = 8; file > 0; file--) {
+            // converts the displayed rank and file into the internal bitboard square index
             int square = 8*(rank-1) + (8-file);
+
             // empty by default
             char squareChar = '.';
 
@@ -44,6 +46,7 @@ void DisplayBoard::printBoard(const ChessBoard& board) {
 
 // prints one bitboard
 void DisplayBoard::printBitboard(const ChessBoard& board, Piece pieceType) {
+    // retrieves the bitboard once so every square check uses the same piece data
     uint64_t bitboard = board.getPieceBitboard(pieceType);
 
     std::cout << std::endl;
@@ -55,6 +58,7 @@ void DisplayBoard::printBitboard(const ChessBoard& board, Piece pieceType) {
         std::cout << rank+1 << " | ";
 
         for (int file = 0; file < 8; file++) {
+            // maps the rank and file directly to the corresponding bitboard index
             int square = 8*rank + file;
 
             if (Utils::checkBit(bitboard, square)) {

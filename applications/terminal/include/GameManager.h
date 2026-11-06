@@ -34,6 +34,7 @@ public:
     GameManager();
 
     // runs the game
+    // repeatedly processes player turns until the game loop is stopped
     void run();
 
     // dtor

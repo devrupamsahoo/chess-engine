@@ -7,6 +7,7 @@
 
 #include "chess/core/ChessBoard.h"
 
+// validates castling rights, king safety, and the conditions required to castle
 class CastlingValidator {
 public:
     // returns true if kingside castling rights are still available

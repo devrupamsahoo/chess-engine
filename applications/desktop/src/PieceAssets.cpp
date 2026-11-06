@@ -13,20 +13,23 @@
 
 #include <cstddef>
 
-#include "PieceAssets.h"
+#include "../include/PieceAssets.h"
 
 // returns the embedded SVG resource path for a piece
 QString pieceResourcePath(Piece piece) {
+    // piece enum values are used as direct indices into the piece lookup tables
     const int index = static_cast<int>(piece);
 
     if (index < 0 || index >= pieceCount) {
         return {};
     }
 
+    // piece values are grouped by color, allowing the resource prefix to be selected by index
     const QChar color = index < blackPawn
         ? QLatin1Char('w')
         : QLatin1Char('b');
 
+    // the lookup table provides the piece character, which is converted to uppercase for the SVG filename
     const QChar type = QChar::fromLatin1(
         pieceToCharMap[static_cast<std::size_t>(index)]).toUpper();
 
@@ -39,10 +42,13 @@ QPixmap renderPiecePixmap(Piece piece, int logicalSize, qreal devicePixelRatio) 
         return {};
     }
 
+    // scale the physical pixel dimensions according to the display's pixel density
     const int pixelSize = qMax(1, qRound(logicalSize * devicePixelRatio));
 
     QPixmap pixmap(pixelSize, pixelSize);
     pixmap.fill(Qt::transparent);
+
+    // tells Qt how many physical pixels represent one logical display pixel
     pixmap.setDevicePixelRatio(devicePixelRatio);
 
     QSvgRenderer renderer(pieceResourcePath(piece));
@@ -52,6 +58,8 @@ QPixmap renderPiecePixmap(Piece piece, int logicalSize, qreal devicePixelRatio) 
     }
 
     QPainter painter(&pixmap);
+
+    // render using logical dimensions so the SVG scales correctly on high-DPI displays
     renderer.render(&painter, QRectF(0, 0, logicalSize, logicalSize));
 
     return pixmap;

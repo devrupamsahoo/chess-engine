@@ -27,6 +27,7 @@ public:
 };
 
 namespace AttackTables {
+    // shared ray table used by attack and movement validation
     extern RayTable rayTable;
 }
 

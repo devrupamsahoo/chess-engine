@@ -16,4 +16,5 @@ cmake-build-qt-gui/
 match_fens.txt
 
 /build/
+/build-tests/
 desktop.ini

@@ -1,17 +1,20 @@
 cmake_minimum_required(VERSION 4.3)
 
 project(chess_engine LANGUAGES CXX)
+include(CTest)
 
+# enforces the c++20 standard without compiler-specific language extensions
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# shared chess rules and board logic
+# builds the shared chess engine library used by the applications and tests
 add_library(chess_core
         src/core/ChessBoard.cpp
         src/core/Enums.cpp
         src/core/Structs.cpp
         src/core/Utils.cpp
+        src/core/GameSession.cpp
 
         src/history/MoveHistory.cpp
 
@@ -25,62 +28,31 @@ add_library(chess_core
         src/move/PieceOwnership.cpp
         src/move/RayTable.cpp
 
+        src/movegen/MoveGeneration.cpp
         src/notation/FEN.cpp
-        include/chess/core/GameSession.h
-        src/core/GameSession.cpp
-
 )
 
+# exposes the public header directory to targets that link against chess_core
 target_include_directories(chess_core
         PUBLIC
         "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )
 
-# terminal application
-add_executable(chess_engine
-        applications/terminal/main.cpp
-        applications/terminal/GameManager.cpp
-        applications/terminal/DisplayBoard.cpp
-)
+# includes the terminal application in the build
+add_subdirectory(applications/terminal)
 
-target_link_libraries(chess_engine
-        PRIVATE
-        chess_core
-)
-
-# used by the terminal app to export match_fens.txt to the project directory
-target_compile_definitions(chess_engine
-        PRIVATE
-        CHESS_ENGINE_PROJECT_DIR="${PROJECT_SOURCE_DIR}"
-)
-
+# controls whether the Qt desktop application is included in the build
 option(BUILD_QT_GUI "Build the Qt desktop application" ON)
 
 if(BUILD_QT_GUI)
+    # finds the required Qt modules and configures Qt-specific build features
     find_package(Qt6 REQUIRED COMPONENTS Widgets Svg)
-
     qt_standard_project_setup()
-
     set(CMAKE_AUTORCC ON)
+    add_subdirectory(applications/desktop)
+endif()
 
-    qt_add_executable(chess_desktop
-            applications/desktop/main.cpp
-            applications/desktop/MainWindow.cpp
-            applications/desktop/ChessBoardWidget.cpp
-            assets/resources.qrc
-            applications/desktop/PieceAssets.h
-            applications/desktop/PieceAssets.cpp
-    )
-
-    target_link_libraries(chess_desktop
-            PRIVATE
-                chess_core
-                Qt6::Widgets
-                Qt6::Svg
-    )
-
-    set_target_properties(chess_desktop PROPERTIES
-            WIN32_EXECUTABLE ON
-    )
-
+# includes the test targets when CTest testing is enabled
+if(BUILD_TESTING)
+    add_subdirectory(tests)
 endif()

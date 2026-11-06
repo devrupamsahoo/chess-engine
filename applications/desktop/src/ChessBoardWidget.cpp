@@ -15,10 +15,11 @@
 #include <QFont>
 #include <QString>
 
-#include "ChessBoardWidget.h"
-#include "PieceAssets.h"
+#include "../include/ChessBoardWidget.h"
+#include "../include/PieceAssets.h"
 #include "chess/core/GameSession.h"
 
+// initializes piece renderers and configures the board for mouse interaction
 ChessBoardWidget::ChessBoardWidget(GameSession *session, QWidget *parent)
     : QWidget(parent), session(session) {
     // create a renderer for each piece and let Qt manage their lifetime
@@ -35,6 +36,7 @@ ChessBoardWidget::ChessBoardWidget(GameSession *session, QWidget *parent)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
+// provides the preferred and minimum dimensions for the board widget
 QSize ChessBoardWidget::sizeHint() const {
     return QSize(640, 640);
 }
@@ -151,6 +153,7 @@ int ChessBoardWidget::squareAt(const QPointF &position) const {
 void ChessBoardWidget::paintEvent(QPaintEvent *event) {
     Q_UNUSED(event);
 
+    // prepares the painter and calculates the available board area
     QPainter painter(this);
     painter.setRenderHint(QPainter::Antialiasing);
     painter.fillRect(rect(), QColor(35, 35, 35));
@@ -166,6 +169,7 @@ void ChessBoardWidget::paintEvent(QPaintEvent *event) {
     const QColor selectionColor(70, 130, 220, 110);
     const ChessBoard &board = session->board();
 
+    // draws each square, its piece, and any selection or move indicators
     for (int square = 0; square < squareCount; ++square) {
         const int file = square % 8;
         const int rank = square / 8;
@@ -322,6 +326,7 @@ void ChessBoardWidget::mousePressEvent(QMouseEvent *event) {
         return;
     }
 
+    // checks whether the clicked piece belongs to the side whose turn it is
     const Piece piece = session->board().getPieceAt(pressedSquare);
     const bool isWhitePiece = piece >= whitePawn && piece <= whiteKing;
     const bool isBlackPiece = piece >= blackPawn && piece <= blackKing;
@@ -342,6 +347,7 @@ void ChessBoardWidget::mousePressEvent(QMouseEvent *event) {
         return;
     }
 
+    // records a destination when a piece was already selected through a previous click
     if (selectedSquare >= 0) {
         isDragging = false;
         pendingTargetSquare = pressedSquare;
@@ -402,6 +408,7 @@ void ChessBoardWidget::mouseReleaseEvent(QMouseEvent *event) {
 
     clearSelection();
 
+    // determines whether the destination completes a pawn promotion before requesting the move
     if (releasedSquare >= 0) {
         const Piece movingPiece = session->board().getPieceAt(startSquare);
         const bool isWhitePawn = movingPiece == whitePawn;
@@ -423,6 +430,7 @@ void ChessBoardWidget::mouseMoveEvent(QMouseEvent *event) {
         return;
     }
 
+    // updates the dragged piece position and redraws it under the cursor
     if (isDragging && (event->buttons() & Qt::LeftButton)) {
         dragPosition = event->position();
         update();
@@ -437,6 +445,7 @@ void ChessBoardWidget::mouseMoveEvent(QMouseEvent *event) {
         return;
     }
 
+    // checks whether the hovered piece belongs to the side whose turn it is
     const Piece piece = session->board().getPieceAt(hoveredSquare);
     const bool isWhitePiece = piece >= whitePawn && piece <= whiteKing;
     const bool isBlackPiece = piece >= blackPawn && piece <= blackKing;

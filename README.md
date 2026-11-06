@@ -6,6 +6,7 @@ A C++20 chess application with a shared chess core and two frontends: a terminal
 
 - Board representation using 12 piece bitboards and cached occupancy bitboards
 - Legal move validation for pawns, knights, bishops, rooks, queens, and kings
+- Pseudo-legal move candidate generation for all piece types, including promotion, en passant, and castling candidates
 - King-safety checks, castling, en passant, and pawn promotion
 - Undo and redo, including special moves
 - FEN serialization, position loading, and per-match FEN history
@@ -13,7 +14,7 @@ A C++20 chess application with a shared chess core and two frontends: a terminal
 - Desktop board with piece graphics, coordinate labels, click-to-move and drag-and-drop input
 - Desktop promotion choice, check indicator, captured-piece display, and controls to undo, redo, reset, load FEN, copy the current FEN, and export FEN history
 
-The game does not yet announce checkmate, stalemate, or draws. These are planned after move generation is implemented.
+The move generator currently produces pseudo-legal candidates; filtering those candidates for king safety and recursive perft counting are not implemented yet. The frontends continue to use the existing move-validation path. The game does not yet announce checkmate, stalemate, or draws; these are planned after legal move generation is available.
 
 ## Terminal Interface
 
@@ -44,15 +45,18 @@ The desktop interface is optional and requires Qt 6 Widgets and Qt 6 Svg develop
 
 - `include/chess/` contains public core, move-validation, history, and notation headers
 - `src/` contains the shared chess core implementation
-- `applications/terminal/` contains the terminal frontend
-- `applications/desktop/` contains the Qt desktop frontend
+- `include/chess/movegen/` and `src/movegen/` contain pseudo-legal move generation
+- `applications/terminal/` contains the terminal frontend, with its own `include/`, `src/`, and `CMakeLists.txt`
+- `applications/desktop/` contains the Qt desktop frontend, with its own `include/`, `src/`, and `CMakeLists.txt`
+- `tests/manual/` contains chess-rule tests; `tests/move-generation/` contains move-generation checks
+- `tests/CMakeLists.txt` builds both test groups into `chess_engine_tests`
 - `assets/` contains desktop piece graphics and Qt resource definitions
 
-`ChessBoard` stores the piece bitboards, occupancy, side to move, castling rights, en passant target, move counters, and move history. `GameSession` provides the frontend-facing interface for making moves, undoing and redoing moves, loading FEN positions, and reading the current game state. The move-validation modules check piece movement, paths, attacks, castling, and king safety. `FEN` handles position serialization and loading.
+`ChessBoard` stores the piece bitboards, occupancy, side to move, castling rights, en passant target, move counters, and move history. `GameSession` provides the frontend-facing interface for making moves, undoing and redoing moves, loading FEN positions, and reading the current game state. The move-validation modules check piece movement, paths, attacks, castling, and king safety. `MoveGeneration` produces pseudo-legal candidates independently of the existing `GameSession` move-query path. `FEN` handles position serialization and loading.
 
 ## Planned Features
 
-- Move generation
+- Legal move filtering and recursive perft tests
 - Checkmate, stalemate, and draw detection after move generation
 - A basic AI opponent using minimax, followed by alpha-beta pruning
 
@@ -83,6 +87,15 @@ cmake --build build-qt --target chess_desktop
 ```
 
 Launch the resulting `chess_desktop` executable from the build directory. Its exact path depends on the operating system and build configuration.
+
+### Tests
+
+Build and run the combined manual and move-generation checks:
+
+```bash
+cmake --build build --target chess_engine_tests
+ctest --test-dir build --output-on-failure
+```
 
 ## Tech Stack
 

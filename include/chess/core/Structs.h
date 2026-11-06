@@ -18,14 +18,18 @@ struct CastlingRights {
 
 // stores the move and state needed for undo and redo
 struct Move {
+    // identifies the source and destination squares of the move
     int startSquare;
     int endSquare;
+
+    // records the piece moved and any piece captured by the move
     Piece movedPiece;
     Piece capturedPiece;
 
     // store the replacement piece so undo can restore the original pawn.
     Piece promotedPiece = noPiece;
 
+    // identifies which castling operation this move represents, if any
     CastlingType castlingType = noCastle;
 
     // preserve castling rights before and after the move for undo and redo

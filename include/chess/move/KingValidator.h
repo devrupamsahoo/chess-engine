@@ -8,6 +8,7 @@
 #include <cmath>
 #include "chess/core/ChessBoard.h"
 
+// validates king movement and checks whether the king is exposed to attack
 class KingValidator {
 public:
     // returns true if a king move is valid

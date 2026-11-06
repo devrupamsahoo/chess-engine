@@ -12,10 +12,10 @@ namespace Utils {
     // returns true if the specified square's bit is set
     bool checkBit(uint64_t board, int square);
 
-    // sets a bit
+    // sets the bit corresponding to the specified square to 1
     void setBit(uint64_t &board, int square);
 
-    // clears a bit
+    // clears the bit corresponding to the specified square to 0
     void clearBit(uint64_t &board, int square);
 
     // converts board coordinates into a square index

@@ -1,6 +1,6 @@
 // Created by devrupamsahoo on 04-11-2026.
 
-#include "MainWindow.h"
+#include "../include/MainWindow.h"
 
 #include <QApplication>
 #include <QClipboard>
@@ -19,8 +19,8 @@
 #include <QTextStream>
 #include <QVBoxLayout>
 
-#include "ChessBoardWidget.h"
-#include "PieceAssets.h"
+#include "../include/ChessBoardWidget.h"
+#include "../include/PieceAssets.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     // starts the window at a 16:9 size while keeping enough room for both panels

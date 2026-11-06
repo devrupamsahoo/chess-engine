@@ -2,7 +2,7 @@
 // Created by sahoo on 23-06-2026.
 //
 
-#include "GameManager.h"
+#include "../include/GameManager.h"
 #include <iostream>
 #include <cctype>
 #include "chess/core/ChessBoard.h"
@@ -11,7 +11,7 @@
 #include "chess/core/Utils.h"
 #include "chess/notation/FEN.h"
 #include <fstream>
-#include "DisplayBoard.h"
+#include "../include/DisplayBoard.h"
 #include <algorithm>
 #include <filesystem>
 
@@ -59,6 +59,7 @@ void GameManager::run() {
 
         bool moveCompleted = processTurn();
 
+        // commands that modify the position without completing a normal turn return false here
         if (moveCompleted && gameIsRunning) {
             // clears terminal
             system("cls");
@@ -216,6 +217,7 @@ bool GameManager::processTurn() {
 
         Piece selectedPiece = session.board().getPieceAt(startPos);
 
+        // promotion requires a pawn and a destination on its final rank
         bool isPromotionMove =
             (selectedPiece == whitePawn || selectedPiece == blackPawn) &&
                 PawnValidator::isPawnPromotion(

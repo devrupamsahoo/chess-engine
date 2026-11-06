@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include "chess/core/Enums.h"
 
+// identifies geometric movement patterns between two board squares
 class MovementPatterns {
 public:
     // returns true if a move is horizontal

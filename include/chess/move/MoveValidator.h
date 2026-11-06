@@ -7,6 +7,7 @@
 
 #include "chess/core/ChessBoard.h"
 
+// validates piece movement rules and determines whether a proposed move is legal
 class MoveValidator {
 public:
     // returns true if the move is a valid knight move

@@ -15,6 +15,7 @@ class FEN;
 
 class ChessBoard {
 private:
+    // allows FEN to access internal board state when loading or saving a position
     friend class FEN;
 
     // array of 12 bitboards

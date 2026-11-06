@@ -61,7 +61,7 @@ public:
     // returns true if a square is being attacked by queens of given color
     static bool isAttackedByQueen(ChessBoard &board, int square, bool attackerIsWhite);
 
-    // returns true if a square is being attacked by pieces of given color
+    // combines the individual piece attack checks to determine whether a square is under attack
     static bool isSquareUnderAttack(ChessBoard &board, int square, bool attackerIsWhite);
 
 };
