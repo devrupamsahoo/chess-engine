@@ -6,7 +6,7 @@
 #define CHESS_ENGINE_GAMESESSION_H
 
 #include "chess/core/ChessBoard.h"
-
+#include "chess/movegen/MoveGeneration.h"
 #include <cstddef>
 #include <string>
 #include <vector>
@@ -47,13 +47,17 @@ public:
     GameSession();
 
     // returns true if king is in check
-    bool isKingInCheck(bool whitePlayer);
+    bool isKingInCheck(bool whitePlayer) const;
 
     // returns the legal destinations for the piece on the specified square
     std::vector<LegalMoveTarget> legalMovesFrom(int startSquare);
 
     // returns the pieces captured in the current position
     const std::vector<Piece>& capturedPieces() const;
+
+    const std::vector<PseudoLegalMove>& legalMoves() const;
+
+    GameStatus gameStatus() const;
 
 private:
     // creates chessboard object
@@ -67,6 +71,16 @@ private:
 
     // stores captured pieces for each recorded position
     std::vector<std::vector<Piece>> capturedPieceSnapshots;
+
+    std::vector<PseudoLegalMove> currentLegalMoves;
+
+    void refreshLegalMoves();
+
+    // checks whether the current position has appeared at least three times
+    bool isThreefoldRepetition() const;
+
+    // returns true when neither player has material that can create checkmate
+    bool isInsufficientMaterial() const;
 };
 
 #endif //CHESS_ENGINE_GAMESESSION_H

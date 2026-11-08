@@ -1,7 +1,7 @@
 # builds the executable containing manual and move-generation tests
 add_executable(chess_engine_tests
         main.cpp
-        move-generation/src/TestPerft.cpp
+
         manual/src/ManualTestUtils.cpp
         manual/src/TestMoveValidation.cpp
         manual/src/TestPawnMovement.cpp
@@ -12,6 +12,16 @@ add_executable(chess_engine_tests
         manual/src/TestPawnPromotion.cpp
         manual/src/TestMoveHistory.cpp
         manual/src/TestFenAndMoveCounters.cpp
+        manual/src/TestGameStatus.cpp
+        manual/src/RunManualTests.cpp
+
+        move-generation/src/TestPerft.cpp
+        move-generation/src/TestPseudoLegalMoveGeneration.cpp
+        move-generation/src/TestLegalMoveFiltering.cpp
+        move-generation/src/TestEnPassantMoveGeneration.cpp
+        move-generation/src/TestCastlingMoveGeneration.cpp
+        move-generation/src/TestPromotionMoveGeneration.cpp
+        move-generation/src/RunMoveGenerationTests.cpp
 )
 
 # links the tests against the chess engine implementation

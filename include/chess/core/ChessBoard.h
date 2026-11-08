@@ -114,6 +114,9 @@ public:
     // returns the current en passant target square
     int getEnPassantTarget() const;
 
+    // returns the number of halfmoves since the last pawn move or capture
+    int getHalfmoveClock() const;
+
     // dtor
     ~ChessBoard() = default;
 };

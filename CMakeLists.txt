@@ -30,6 +30,7 @@ add_library(chess_core
 
         src/movegen/MoveGeneration.cpp
         src/notation/FEN.cpp
+        src/evaluation/Evaluation.cpp
 )
 
 # exposes the public header directory to targets that link against chess_core

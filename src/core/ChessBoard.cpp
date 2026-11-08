@@ -574,3 +574,8 @@ bool ChessBoard::executeCastle(int startPos, int endPos, bool isWhitePlayer) {
 int ChessBoard::getEnPassantTarget() const {
     return enPassantTarget;
 }
+
+// returns the number of halfmoves since the last pawn move or capture
+int ChessBoard::getHalfmoveClock() const {
+    return halfmoveClock;
+}

@@ -5,6 +5,7 @@
 #include "../../include/chess/movegen/MoveGeneration.h"
 #include <bit>
 #include "chess/move/AttackValidator.h"
+#include "chess/move/KingValidator.h"
 
 // helper functions used only inside this file
 namespace {
@@ -15,13 +16,11 @@ namespace {
         int to,
         bool white,
         bool isEnPassant = false) {
-
         // last rank for the pawn's color, where promotion happens
         const int lastRank = white ? 7 : 0;
 
         // converts the target square into its rank and checks if it is the promotion rank
         if (to / 8 == lastRank) {
-
             // pieces a pawn can promote to, in the color of the moving side
             const Piece choices[] = {
                 white ? whiteQueen : blackQueen,
@@ -355,6 +354,33 @@ std::vector<PseudoLegalMove> MoveGeneration::generatePseudoLegalMoves(const Ches
 }
 
 // removes pseudo legal moves that leave the mover's own king in check
-std::vector<PseudoLegalMove> MoveGeneration::filterLegalMoves(ChessBoard &board, const std::vector<PseudoLegalMove> &candidates) {
-    // work here next
+std::vector<PseudoLegalMove> MoveGeneration::filterLegalMoves(const ChessBoard &board, const std::vector<PseudoLegalMove> &candidates) {
+    const bool whiteToMove = board.isWhiteTurn();
+
+    std::vector<PseudoLegalMove> legalMoves;
+
+    for (const PseudoLegalMove &candidate: candidates) {
+        ChessBoard copyBoard(board);
+
+        if (candidate.castling != noCastle) {
+            if (!copyBoard.executeCastle(candidate.startSquare, candidate.endSquare, whiteToMove)) {
+                continue;
+            }
+        } else {
+            copyBoard.makeMove(candidate.startSquare, candidate.endSquare, candidate.promotion, true);
+        }
+
+        if (!KingValidator::isKingInCheck(copyBoard, whiteToMove)) {
+            legalMoves.push_back(candidate);
+        }
+    }
+
+
+    return legalMoves;
+}
+
+std::vector<PseudoLegalMove> MoveGeneration::generateLegalMoves(const ChessBoard& board) {
+    const auto pseudoMoves = generatePseudoLegalMoves(board);
+
+    return filterLegalMoves(board, pseudoMoves);
 }

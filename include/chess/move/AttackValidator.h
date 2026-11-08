@@ -44,25 +44,25 @@ public:
     static void initPawnAttacks();
 
     // returns true if a square is being attacked by knights of given color
-    static bool isAttackedByKnight(ChessBoard &board, int square, bool attackerIsWhite);
+    static bool isAttackedByKnight(const ChessBoard &board, int square, bool attackerIsWhite);
 
     // returns true if a square is being attacked by king of given color
-    static bool isAttackedByKing(ChessBoard &board, int square, bool attackerIsWhite);
+    static bool isAttackedByKing(const ChessBoard &board, int square, bool attackerIsWhite);
 
     // returns true if a square is being attacked by pawns of given color
-    static bool isAttackedByPawn(ChessBoard &board, int square, bool attackerIsWhite);
+    static bool isAttackedByPawn(const ChessBoard &board, int square, bool attackerIsWhite);
 
     // returns true if a square is attacked by rooks or queens along ranks and files
-    static bool isAttackedByRook(ChessBoard &board, int square, bool attackerIsWhite);
+    static bool isAttackedByRook(const ChessBoard &board, int square, bool attackerIsWhite);
 
     // returns true if a square is attacked by bishops or queens along diagonals
-    static bool isAttackedByBishop(ChessBoard &board, int square, bool attackerIsWhite);
+    static bool isAttackedByBishop(const ChessBoard &board, int square, bool attackerIsWhite);
 
     // returns true if a square is being attacked by queens of given color
-    static bool isAttackedByQueen(ChessBoard &board, int square, bool attackerIsWhite);
+    static bool isAttackedByQueen(const ChessBoard &board, int square, bool attackerIsWhite);
 
     // combines the individual piece attack checks to determine whether a square is under attack
-    static bool isSquareUnderAttack(ChessBoard &board, int square, bool attackerIsWhite);
+    static bool isSquareUnderAttack(const ChessBoard &board, int square, bool attackerIsWhite);
 
 };
 

@@ -25,7 +25,9 @@ public:
     static std::vector<PseudoLegalMove> generatePseudoLegalMoves(const ChessBoard& board);
 
     // discards all illegal moves
-    std::vector<PseudoLegalMove> filterLegalMoves(ChessBoard& board, const std::vector<PseudoLegalMove>& candidates);
+    static std::vector<PseudoLegalMove> filterLegalMoves(const ChessBoard& board, const std::vector<PseudoLegalMove>& candidates);
+
+    static std::vector<PseudoLegalMove> generateLegalMoves(const ChessBoard& board);
 };
 
 

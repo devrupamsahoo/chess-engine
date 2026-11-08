@@ -17,7 +17,7 @@
 
 namespace {
     // validates terminal move input such as e2e4 or e7e8q
-    bool isValidMoveInput(const std::string& input) {
+    bool isValidMoveInput(const std::string &input) {
         if (input.length() != 4 && input.length() != 5) {
             return false;
         }
@@ -27,7 +27,7 @@ namespace {
             input[2] < 'a' || input[2] > 'h' ||
             input[3] < '1' || input[3] > '8') {
             return false;
-            }
+        }
 
         if (input.length() == 4) {
             return true;
@@ -69,9 +69,42 @@ void GameManager::run() {
             // next player (opponent) after the move
             bool isNextPlayerWhite = session.board().isWhiteTurn();
 
-            // notify if the opponent's king is in check
-            if (session.isKingInCheck(isNextPlayerWhite)) {
-                std::cout << std::endl << (isNextPlayerWhite ? "White" : "Black") << " king is in check!" << std::endl;
+            // the winner is the opponent of the side to move
+            const std::string winner = isNextPlayerWhite ? "Black" : "White";
+
+            // reads the current game status after the move
+            const GameStatus status =
+                    session.gameStatus();
+
+            // reports check, checkmate, stalemate, and draw states
+            switch (status) {
+                case GameStatus::check:
+                    std::cout << (isNextPlayerWhite ? "White" : "Black") << " king is in check!" << std::endl;
+                    break;
+
+                case GameStatus::checkmate:
+                    std::cout << "Checkmate! " << winner << " wins!" << std::endl;
+
+                    // stops the game loop after checkmate
+                    gameIsRunning = false;
+                    break;
+
+                case GameStatus::stalemate:
+                    std::cout << "Stalemate! Draw." << std::endl;
+
+                    // stops the game loop after stalemate
+                    gameIsRunning = false;
+                    break;
+
+                case GameStatus::draw:
+                    std::cout << "Draw!" << std::endl;
+
+                    // stops the game loop after a draw
+                    gameIsRunning = false;
+                    break;
+
+                case GameStatus::ongoing:
+                    break;
             }
 
             DisplayBoard::printBoard(session.board());
@@ -92,14 +125,14 @@ bool GameManager::processTurn() {
     char promotedPiece = 'q'; // default to Queen if not specified
 
     // input loop for valid input format and valid piece selection
-    while(true) {
+    while (true) {
         if (!getInput("Enter your move: ", input)) {
             gameIsRunning = false;
             return false;
         }
 
         // normalize commands, coordinates, and promotion choices to lowercase
-        std::transform(input.begin(), input.end(), input.begin(),[](unsigned char ch) {
+        std::transform(input.begin(), input.end(), input.begin(), [](unsigned char ch) {
             return static_cast<char>(std::tolower(ch));
         });
 
@@ -149,7 +182,7 @@ bool GameManager::processTurn() {
             printControls();
             DisplayBoard::printBoard(session.board());
             std::cout << session.currentFen() << std::endl;
-            return false;         // returns false so the turn doesn't switch
+            return false; // returns false so the turn doesn't switch
         }
 
         // load a position from FEN and start a new match history from it
@@ -186,7 +219,7 @@ bool GameManager::processTurn() {
             }
 
             // export snapshots in move order, including the current position
-            for (const std::string& fen : session.fenHistory()) {
+            for (const std::string &fen: session.fenHistory()) {
                 fenFile << fen << '\n';
             }
 
@@ -219,9 +252,9 @@ bool GameManager::processTurn() {
 
         // promotion requires a pawn and a destination on its final rank
         bool isPromotionMove =
-            (selectedPiece == whitePawn || selectedPiece == blackPawn) &&
+                (selectedPiece == whitePawn || selectedPiece == blackPawn) &&
                 PawnValidator::isPawnPromotion(
-                endPos, session.board().isWhiteTurn());
+                    endPos, session.board().isWhiteTurn());
 
         // reject promotion choices unless a pawn is reaching its last rank
         if (input.length() == 5 && !isPromotionMove) {
@@ -273,7 +306,6 @@ bool GameManager::getInput(const std::string &prompt, std::string &input) {
 
 // displays the current player's turn
 void GameManager::displayTurn() {
-
     if (session.board().isWhiteTurn()) {
         std::cout << "White's Turn" << std::endl;
     } else {
@@ -286,7 +318,7 @@ void GameManager::printControls() {
     std::cout << std::endl;
     std::cout << "Enter 'u' to undo move" << std::endl;
     std::cout << "Enter 'r' to redo move" << std::endl;
-    std::cout << "Enter 'x' to restart game"<< std::endl;
+    std::cout << "Enter 'x' to restart game" << std::endl;
     std::cout << "Enter 'q' to quit game" << std::endl;
     std::cout << "Enter 'e' export FEN from current match" << std::endl;
     std::cout << "Enter 'f' to load match from FEN" << std::endl;

@@ -12,9 +12,11 @@ namespace ManualTests {
     int failures = 0;
 
     // checks a test condition and records a failure with its name when the condition is false
-    void expect(bool condition, const std::string &testName) {
-        if (!condition) {
-            std::cerr << "FAIL: " << testName << '\n';
+    void expect(bool condition, const std::string& testName) {
+        if (condition) {
+            std::cout << "PASS: " << testName << '\n';
+        } else {
+            std::cerr << "\nFAIL: " << testName << '\n';
             ++failures;
         }
     }

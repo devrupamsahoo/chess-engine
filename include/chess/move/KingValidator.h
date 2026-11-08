@@ -15,7 +15,7 @@ public:
     static bool isKingMove(int startPos, int endPos);
 
     // returns true if the specified player's king is currently in check
-    static bool isKingInCheck(ChessBoard& board, bool isWhitePlayer);
+    static bool isKingInCheck(const ChessBoard& board, bool isWhitePlayer);
 
     // returns true if the move leaves the current player's king in check
     static bool leavesKingInCheck(ChessBoard &board, int startPos, int endPos);

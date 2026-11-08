@@ -152,7 +152,7 @@ void AttackValidator::initPawnAttacks() {
 }
 
 // returns true if a square is being attacked by knights of given color
-bool AttackValidator::isAttackedByKnight(ChessBoard &board, int square, bool attackerIsWhite) {
+bool AttackValidator::isAttackedByKnight(const ChessBoard &board, int square, bool attackerIsWhite) {
     // gets the bitboard containing all knights of the specified color
     uint64_t knights = attackerIsWhite ? board.getPieceBitboard(whiteKnight) :
                                          board.getPieceBitboard(blackKnight);
@@ -179,7 +179,7 @@ bool AttackValidator::isAttackedByKnight(ChessBoard &board, int square, bool att
 }
 
 // returns true if a square is being attacked by king of given color
-bool AttackValidator::isAttackedByKing(ChessBoard &board, int square, bool attackerIsWhite) {
+bool AttackValidator::isAttackedByKing(const ChessBoard &board, int square, bool attackerIsWhite) {
     // gets the bitboard containing all kings of the specified color
     uint64_t kings = attackerIsWhite ? board.getPieceBitboard(whiteKing) :
                                        board.getPieceBitboard(blackKing);
@@ -206,7 +206,7 @@ bool AttackValidator::isAttackedByKing(ChessBoard &board, int square, bool attac
 }
 
 // returns true if a square is being attacked by pawns of given color
-bool AttackValidator::isAttackedByPawn(ChessBoard &board, int square, bool attackerIsWhite) {
+bool AttackValidator::isAttackedByPawn(const ChessBoard &board, int square, bool attackerIsWhite) {
     uint64_t pawns = attackerIsWhite ? board.getPieceBitboard(whitePawn) :
                                        board.getPieceBitboard(blackPawn);
 
@@ -230,7 +230,7 @@ bool AttackValidator::isAttackedByPawn(ChessBoard &board, int square, bool attac
 }
 
 // returns true if a square is being attacked by rooks of given color
-bool AttackValidator::isAttackedByRook(ChessBoard &board, int square, bool attackerIsWhite) {
+bool AttackValidator::isAttackedByRook(const ChessBoard &board, int square, bool attackerIsWhite) {
     // gets all occupied squares to detect pieces blocking sliding attacks
     uint64_t occupancy = board.getAllOccupancy();
 
@@ -271,7 +271,7 @@ bool AttackValidator::isAttackedByRook(ChessBoard &board, int square, bool attac
 }
 
 // returns true if a square is being attacked by bishops of given color
-bool AttackValidator::isAttackedByBishop(ChessBoard &board, int square, bool attackerIsWhite) {
+bool AttackValidator::isAttackedByBishop(const ChessBoard &board, int square, bool attackerIsWhite) {
     uint64_t occupancy = board.getAllOccupancy();
 
     // queen also behaves like bishop
@@ -308,7 +308,7 @@ bool AttackValidator::isAttackedByBishop(ChessBoard &board, int square, bool att
 }
 
 // returns true if a square is being attacked by queens of given color
-bool AttackValidator::isAttackedByQueen(ChessBoard &board, int square, bool attackerIsWhite) {
+bool AttackValidator::isAttackedByQueen(const ChessBoard &board, int square, bool attackerIsWhite) {
     // queen is the combination of rook and bishop
 
     bool rookAttack = isAttackedByRook(board, square, attackerIsWhite);
@@ -327,7 +327,7 @@ bool AttackValidator::isAttackedByQueen(ChessBoard &board, int square, bool atta
 }
 
 // returns true if a square is being attacked by pieces of given color
-bool AttackValidator::isSquareUnderAttack(ChessBoard &board, int square, bool attackerIsWhite) {
+bool AttackValidator::isSquareUnderAttack(const ChessBoard &board, int square, bool attackerIsWhite) {
 
     // checks each piece type until one confirms an attack on the target square
     if (isAttackedByPawn(board, square, attackerIsWhite)) {

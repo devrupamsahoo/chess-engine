@@ -434,28 +434,64 @@ void MainWindow::connectUiActions() {
     });
 }
 
-// updates the turn indicator and highlights the king when it is in check
+// updates the turn indicator, game result, and king check highlight
 void MainWindow::updateTurnIndicator() {
-    // reads whose turn it is and whether that side's king is currently attacked
+    // reads which side must move in the current position
     const bool whiteToMove = session.board().isWhiteTurn();
-    const bool kingInCheck = session.isKingInCheck(whiteToMove);
-    const QString turnText = whiteToMove
-                                 ? QStringLiteral("White to move")
-                                 : QStringLiteral("Black to move");
 
-    // marks check in both the turn text and board so it is visible in either area
-    turnLabel->setText(
-        kingInCheck ? turnText + QStringLiteral(" · CHECK") : turnText
-    );
-    // changes the turn text color only while the side to move is in check
+    // reads the complete status calculated by GameSession
+    const GameStatus status = session.gameStatus();
+
+    QString statusText;
+    bool kingInCheck = false;
+
+    // chooses the message shown above the board
+    switch (status) {
+        case GameStatus::ongoing:
+            statusText = whiteToMove
+                             ? QStringLiteral("White to move")
+                             : QStringLiteral("Black to move");
+            break;
+
+        case GameStatus::check:
+            statusText = whiteToMove
+                             ? QStringLiteral("White to move · CHECK")
+                             : QStringLiteral("Black to move · CHECK");
+            kingInCheck = true;
+            break;
+
+        case GameStatus::checkmate:
+            statusText = whiteToMove
+                             ? QStringLiteral("CHECKMATE · Black wins")
+                             : QStringLiteral("CHECKMATE · White wins");
+            kingInCheck = true;
+            break;
+
+        case GameStatus::stalemate:
+            statusText = QStringLiteral("STALEMATE · Draw");
+            break;
+
+        case GameStatus::draw:
+            statusText = QStringLiteral("DRAW");
+            break;
+    }
+
+    // updates the visible status text
+    turnLabel->setText(statusText);
+
+    // highlights check and checkmate states with the existing warning color
     turnLabel->setStyleSheet(
-        kingInCheck
+        status == GameStatus::check ||
+        status == GameStatus::checkmate
             ? QStringLiteral("color: #ff7777; font-weight: bold;")
             : QString()
     );
-    // passes the checked king square to the board, or clears the marker when safe
+
+    // passes the checked king square to the board, or clears the marker
     boardWidget->setCheckSquare(
-        kingInCheck ? session.board().getKingPos(whiteToMove) : -1
+        kingInCheck
+            ? session.board().getKingPos(whiteToMove)
+            : -1
     );
 }
 

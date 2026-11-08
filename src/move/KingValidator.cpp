@@ -21,7 +21,7 @@ bool KingValidator::isKingMove(int startPos, int endPos) {
 }
 
 // returns true if the specified player's king is currently in check
-bool KingValidator::isKingInCheck(ChessBoard &board, bool isWhitePlayer) {
+bool KingValidator::isKingInCheck(const ChessBoard &board, bool isWhitePlayer) {
 
     int kingSquare = board.getKingPos(isWhitePlayer);
 

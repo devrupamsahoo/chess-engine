@@ -14,7 +14,7 @@ A C++20 chess application with a shared chess core and two frontends: a terminal
 - Desktop board with piece graphics, coordinate labels, click-to-move and drag-and-drop input
 - Desktop promotion choice, check indicator, captured-piece display, and controls to undo, redo, reset, load FEN, copy the current FEN, and export FEN history
 
-The move generator currently produces pseudo-legal candidates; filtering those candidates for king safety and recursive perft counting are not implemented yet. The frontends continue to use the existing move-validation path. The game does not yet announce checkmate, stalemate, or draws; these are planned after legal move generation is available.
+The move generator produces pseudo-legal candidates and filters them into legal moves using king-safety validation. `GameSession` uses the legal move list for move execution, undo/redo, frontend move selection, and game-status detection. Recursive perft verification covers standard reference positions and deeper regression cases.
 
 ## Terminal Interface
 
@@ -52,13 +52,20 @@ The desktop interface is optional and requires Qt 6 Widgets and Qt 6 Svg develop
 - `tests/CMakeLists.txt` builds both test groups into `chess_engine_tests`
 - `assets/` contains desktop piece graphics and Qt resource definitions
 
-`ChessBoard` stores the piece bitboards, occupancy, side to move, castling rights, en passant target, move counters, and move history. `GameSession` provides the frontend-facing interface for making moves, undoing and redoing moves, loading FEN positions, and reading the current game state. The move-validation modules check piece movement, paths, attacks, castling, and king safety. `MoveGeneration` produces pseudo-legal candidates independently of the existing `GameSession` move-query path. `FEN` handles position serialization and loading.
+`ChessBoard` stores the piece bitboards, occupancy, side to move, castling rights, en passant target, move counters, and move history. `GameSession` provides the frontend-facing interface for making moves, undoing and redoing moves, loading FEN positions, reading the current game state, and exposing legal moves. The move-validation modules check piece movement, paths, attacks, castling, and king safety. `MoveGeneration` produces pseudo-legal candidates, filters them into legal moves, and supplies the legal move list used by `GameSession` and both frontends. `FEN` handles position serialization and loading.
 
 ## Planned Features
 
-- Legal move filtering and recursive perft tests
-- Checkmate, stalemate, and draw detection after move generation
-- A basic AI opponent using minimax, followed by alpha-beta pruning
+- Complete the evaluation module
+- Implement a material-based evaluation function
+- Implement minimax search
+- Add alpha-beta pruning
+- Add move ordering and transposition-table support
+- Add Zobrist position hashing
+- Add iterative deepening and time management
+- Add a terminal and desktop AI opponent
+- Add UCI engine protocol support
+- Add opening-book and endgame-tablebase support
 
 ## Build and Run
 
