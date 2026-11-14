@@ -30,6 +30,14 @@ add_library(chess_core
 
         src/movegen/MoveGeneration.cpp
         src/notation/FEN.cpp
+
+        src/evaluation/PieceBonuses.cpp
+        src/evaluation/PawnStructure.cpp
+        src/evaluation/Mobility.cpp
+        src/evaluation/KingSafety.cpp
+        src/evaluation/KingAttackers.cpp
+        src/evaluation/GamePhase.cpp
+        src/evaluation/EvaluationConstants.cpp
         src/evaluation/Evaluation.cpp
 )
 

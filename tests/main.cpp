@@ -1,14 +1,17 @@
 #include "manual/include/ManualTestUtils.h"
 #include "manual/include/RunManualTests.h"
 #include "move-generation/include/RunMoveGenerationTests.h"
+#include "evaluation/include/RunEvaluationTests.h"
 
 #include <iostream>
 
 // runs the manual and move-generation test suites
 int main() {
-    runManualTests();
+    // runManualTests();
 
-    MoveGenerationTests::runMoveGenerationTests();
+    EvaluationTests::runEvaluationTests();
+
+    // MoveGenerationTests::runMoveGenerationTests();
 
     using namespace ManualTests;
 

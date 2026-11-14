@@ -22,6 +22,17 @@ add_executable(chess_engine_tests
         move-generation/src/TestCastlingMoveGeneration.cpp
         move-generation/src/TestPromotionMoveGeneration.cpp
         move-generation/src/RunMoveGenerationTests.cpp
+
+        evaluation/src/TestEvaluation.cpp
+        evaluation/src/TestMaterialAndPSTs.cpp
+        evaluation/src/TestGamePhase.cpp
+        evaluation/src/TestPieceBonuses.cpp
+        evaluation/src/TestPawnStructure.cpp
+        evaluation/src/TestKingSafety.cpp
+        evaluation/src/TestKingAttackers.cpp
+        evaluation/src/TestMobility.cpp
+        evaluation/src/TestEvaluationIntegration.cpp
+        evaluation/src/RunEvaluationTests.cpp
 )
 
 # links the tests against the chess engine implementation
@@ -31,6 +42,7 @@ target_link_libraries(chess_engine_tests PRIVATE chess_core)
 target_include_directories(chess_engine_tests PRIVATE
         manual/include
         move-generation/include
+        evaluation/include
 )
 
 # registers the test executable with CTest so it can be run through the test runner
